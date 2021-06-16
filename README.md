@@ -1,5 +1,5 @@
-
-# 1984bot - Custom server bot for the [CuratedTumblr Discord Server](https://discord.gg/aWtJjSFG5X), a discord server for the [r/CuratedTumblr](https://www.reddit.com/r/CuratedTumblr) subreddit
+# 1984bot  
+Custom server bot for the [CuratedTumblr Discord Server](https://discord.gg/aWtJjSFG5X), a discord server for the [r/CuratedTumblr](https://www.reddit.com/r/CuratedTumblr) subreddit
 
 ## Functions:
 - Word Highlight (Maybe find some way to fit into other blacklist too)
