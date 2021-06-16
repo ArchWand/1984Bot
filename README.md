@@ -44,7 +44,7 @@ log kick/ban
 send mod channel msg "hey! user got kicked/banned! reason?"
 dm user with reason
 
-Join/Leave
+## Join/Leave
 on join, dm members a copy of the rules
 	add string "Randomly placed string to thwart bots! paste this into #shoelace to join" in certain spots randomly
 append user and random string added to list
@@ -52,5 +52,5 @@ a msg from user containing string gives member role and removes them from list
 purge list every 24 hours
 on leave, immortalize their shame.
 
-Reaction Roles
+## Reaction Roles
 https://discordpy.readthedocs.io/en/latest/api.html#discord.on_raw_reaction_add
