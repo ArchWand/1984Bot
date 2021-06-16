@@ -2,17 +2,16 @@ import discord
 import numpy as np
 import os
 from dotenv import load_dotenv
+from discord.ext import commands
 
 load_dotenv()
 token = os.getenv('discordToken')
 
-client = discord.Client()
+bot = commands.Bot(command_prefix='1984bot, ')
 
-blacklistKeywords = ['test']
+blacklistKeywords = ['testing']
 
-
-
-@client.event
+@bot.event
 async def on_ready():
     print('ONLINE')
 
@@ -45,6 +44,19 @@ Rules structure
     Edit command: index, 'rule'
 '''
 
+rules = [['No spam', 'including cults'], ["Don\'t ask for mod or admin."]]
+rulesEmbed = discord.Embed(title='Rules List', color=discord.Color.dark_theme())
+for index in range(len(rules)):
+    if len(rules[index]) == 2:
+        rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value=rules[index][1], inline=False)
+    else:
+        rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value='-----', inline=False)
+print('RULES GENERATED')
+@bot.command(name='administrate', help='ESTABLISH LAW AND ORDER')
+async def rulesCreator(ctx):
+    #print('COMMAND RECEIVED')
+    await ctx.send(embed=rulesEmbed)
+
 '''
 Word Highlight
     for keyword in blacklist:
@@ -53,15 +65,13 @@ Word Highlight
     send message in mod channel "message (copy) violates these keywords: [violationList]"
 '''
 
-
-
-
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    await bot.process_commands(message)
+    if message.author == bot.user:
         return
     violationList = []
-    logChannel = client.get_channel(851191799464984646)
+    logChannel = bot.get_channel(851191799464984646)
     for word in blacklistKeywords:
         if word.lower() in message.content.lower():
             violationList.append(word)
@@ -75,12 +85,6 @@ async def on_message(message):
     embed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
     embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
     await logChannel.send(embed=embed)
-
-
-
-
-
-
 
 '''
 Cone/Ice
@@ -113,7 +117,7 @@ Reaction Roles
 lol no idea how this works
 '''
 
-client.run(token)
+bot.run(token)
 
 
     
