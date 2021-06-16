@@ -1,7 +1,21 @@
 import discord
 import numpy as np
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+token = os.getenv('discordToken')
+
+client = discord.Client()
+
+blacklistKeywords = ['test']
+logChannel = client.get_channel(851191799464984646)
 
 
+
+@client.event
+async def on_ready():
+    print('ONLINE')
 
 '''
 DISCORD BOT
@@ -40,6 +54,27 @@ Word Highlight
     send message in mod channel "message (copy) violates these keywords: [violationList]"
 '''
 
+
+
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+    violationList = []
+    for word in blacklistKeywords:
+        if word in message.content:
+            violationList.append(word)
+    if len(violationList) == 0:
+        return
+    await logChannel.send(message.author.name + ' sent a message containing: ' + ', '.join(violationList) + ' at ' + message.jump_url)
+
+
+
+
+
+
+
 '''
 Cone/Ice
     log cone/ice update
@@ -70,6 +105,8 @@ Join/Leave
 Reaction Roles
 lol no idea how this works
 '''
+
+client.run(token)
 
 
     
