@@ -52,4 +52,4 @@ purge list every 24 hours
 on leave, immortalize their shame.
 
 Reaction Roles
-lol no idea how this works
+https://discordpy.readthedocs.io/en/latest/api.html#discord.on_raw_reaction_add
