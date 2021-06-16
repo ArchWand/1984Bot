@@ -9,7 +9,6 @@ token = os.getenv('discordToken')
 client = discord.Client()
 
 blacklistKeywords = ['test']
-logChannel = client.get_channel(851191799464984646)
 
 
 
@@ -62,7 +61,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     violationList = []
-    logChannel = client.get_channel(854548027779842059)
+    logChannel = client.get_channel(851191799464984646)
     for word in blacklistKeywords:
         if word in message.content:
             violationList.append(word)
