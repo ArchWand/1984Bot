@@ -62,12 +62,16 @@ async def on_message(message):
     if message.author == client.user:
         return
     violationList = []
+    logChannel = client.get_channel(854548027779842059)
     for word in blacklistKeywords:
         if word in message.content:
             violationList.append(word)
     if len(violationList) == 0:
         return
-    await logChannel.send(message.author.name + ' sent a message containing: ' + ', '.join(violationList) + ' at ' + message.jump_url)
+    alert = message.author.name + ' sent a message containing: ' + ', '.join(violationList)
+    embed = discord.Embed(title='Violation', url=message.jump_url, description=alert, color = discord.Color.dark_gold())
+    embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
+    await logChannel.send(embed=embed)
 
 
 
