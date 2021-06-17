@@ -7,7 +7,9 @@ from discord.ext import commands
 load_dotenv()
 token = os.getenv('discordToken')
 
-bot = commands.Bot(command_prefix='1984bot, ')
+bot = commands.Bot(command_prefix=['1984bot, ', '$'])
+
+logChannelID = 851191799464984646
 
 blacklistKeywords = ['testing']
 
@@ -52,10 +54,46 @@ for index in range(len(rules)):
     else:
         rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value='-----', inline=False)
 print('RULES GENERATED')
-@bot.command(name='administrate', help='ESTABLISH LAW AND ORDER')
+@bot.command(name='administrate', aliases = ['rulesCreate', 'rC'], help='ESTABLISH LAW AND ORDER')
 async def rulesCreator(ctx):
     #print('COMMAND RECEIVED')
-    await ctx.send(embed=rulesEmbed)
+    global rulesMsgID
+    global rulesChannelID
+    rulesMsg = await ctx.send(embed=rulesEmbed)
+    rulesMsgID = rulesMsg.id
+    rulesChannelID = ctx.channel.id
+
+@bot.command(name='directive:', aliases = ['addRule', 'aR'], help='EXPAND LEGISLATURE')
+async def newRule(ctx, mainRule, descrip, index=None):
+    if index == None:
+        index = len(rules)
+    else:
+        index = int(index)-1
+    rules.insert(index, [mainRule, descrip])
+    rulesEmbed = discord.Embed(title='Rules List', color=discord.Color.dark_theme())
+    for index in range(len(rules)):
+        if len(rules[index]) == 2:
+            rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value=rules[index][1], inline=False)
+        else:
+            rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value='-----', inline=False)
+    rulesChannel = bot.get_channel(rulesChannelID)
+    rulesMsg = await rulesChannel.fetch_message(id=rulesMsgID)
+    await rulesMsg.edit(embed=rulesEmbed)
+
+@bot.command(name='removal:', aliases = ['removeRule', 'rR'], help='STREAMLINE LEGISLATURE')
+async def subtractRule(ctx, index):
+    index = int(index)-1
+    rules.pop(index)
+    rulesEmbed = discord.Embed(title='Rules List', color=discord.Color.dark_theme())
+    for index in range(len(rules)):
+        if len(rules[index]) == 2:
+            rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value=rules[index][1], inline=False)
+        else:
+            rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value='-----', inline=False)
+    rulesChannel = bot.get_channel(rulesChannelID)
+    rulesMsg = await rulesChannel.fetch_message(id=rulesMsgID)
+    await rulesMsg.edit(embed=rulesEmbed)
+    
 
 '''
 Word Highlight
@@ -71,7 +109,7 @@ async def on_message(message):
     if message.author == bot.user:
         return
     violationList = []
-    logChannel = bot.get_channel(851191799464984646)
+    logChannel = bot.get_channel(logChannelID)
     for word in blacklistKeywords:
         if word.lower() in message.content.lower():
             violationList.append(word)
