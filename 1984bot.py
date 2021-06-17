@@ -7,7 +7,7 @@ from discord.ext import commands
 load_dotenv()
 token = os.getenv('discordToken')
 
-bot = commands.Bot(command_prefix=['1984bot, ', '$'])
+bot = commands.Bot(command_prefix=['1984bot, ', '$', '<@854250560927957002> '])
 
 logChannelID = 851191799464984646
 
