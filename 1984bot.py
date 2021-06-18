@@ -1,5 +1,6 @@
 import discord
 import numpy as np
+import pandas as pd
 import os
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -7,9 +8,16 @@ from discord.ext import commands
 load_dotenv()
 token = os.getenv('discordToken')
 
-bot = commands.Bot(command_prefix=['1984bot, ', '$', '<@854250560927957002> '])
+bot = commands.Bot(command_prefix=['1984bot, ', '$'])
 
 logChannelID = 851191799464984646
+
+if os.path.exists('rules.csv') == True:
+    rulesDF = pd.read_csv('rules.csv', sep=';')
+else:
+    rulesDF = pd.DataFrame(index=(0, 1), columns = ['ID', '1'])
+
+
 
 blacklistKeywords = ['testing']
 
@@ -46,53 +54,47 @@ Rules structure
     Edit command: index, 'rule'
 '''
 
-rules = [['No spam', 'including cults'], ["Don\'t ask for mod or admin."]]
-rulesEmbed = discord.Embed(title='Rules List', color=discord.Color.dark_theme())
-for index in range(len(rules)):
-    if len(rules[index]) == 2:
-        rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value=rules[index][1], inline=False)
-    else:
-        rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value='-----', inline=False)
+def rulesEmbedUpdate():
+    rulesEmbed = discord.Embed(title='Rules List', color=discord.Color.dark_theme())
+    for column in sorted(rulesDF.columns[1:], key=int):
+        rulesEmbed.add_field(name=str(column) + '. ' + str(rulesDF.at[0, column]), value=str(rulesDF.at[1, column]), inline=False)
+    return rulesEmbed
+
+async def rulesUpdate(rulesEmbed):
+    rulesChannel = bot.get_channel(rulesDF.at[0, 'ID'])
+    rulesMsg = await rulesChannel.fetch_message(id=rulesDF.at[1, 'ID'])
+    await rulesMsg.edit(embed=rulesEmbed)
+
+rulesEmbed = rulesEmbedUpdate()
 print('RULES GENERATED')
+
 @bot.command(name='administrate', aliases = ['rulesCreate', 'rC'], help='ESTABLISH LAW AND ORDER')
 async def rulesCreator(ctx):
     #print('COMMAND RECEIVED')
-    global rulesMsgID
-    global rulesChannelID
     rulesMsg = await ctx.send(embed=rulesEmbed)
-    rulesMsgID = rulesMsg.id
-    rulesChannelID = ctx.channel.id
+    rulesDF.at[1, 'ID'] = rulesMsg.id
+    rulesDF.at[0, 'ID'] = ctx.channel.id
 
 @bot.command(name='directive:', aliases = ['addRule', 'aR'], help='EXPAND LEGISLATURE')
 async def newRule(ctx, mainRule, descrip, index=None):
     if index == None:
-        index = len(rules)
+        index = len(rulesDF.columns)
     else:
-        index = int(index)-1
-    rules.insert(index, [mainRule, descrip])
-    rulesEmbed = discord.Embed(title='Rules List', color=discord.Color.dark_theme())
-    for index in range(len(rules)):
-        if len(rules[index]) == 2:
-            rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value=rules[index][1], inline=False)
-        else:
-            rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value='-----', inline=False)
-    rulesChannel = bot.get_channel(rulesChannelID)
-    rulesMsg = await rulesChannel.fetch_message(id=rulesMsgID)
-    await rulesMsg.edit(embed=rulesEmbed)
+        index = int(index)
+        for column in reversed(rulesDF.columns[index:]):
+            rulesDF.rename(columns={column: str(int(column)+1)}, inplace=True)
+    rulesDF.at[0, index] = mainRule
+    rulesDF.at[1, index] = descrip
+    rulesEmbed = rulesEmbedUpdate()
+    await rulesUpdate(rulesEmbed)
 
 @bot.command(name='removal:', aliases = ['removeRule', 'rR'], help='STREAMLINE LEGISLATURE')
 async def subtractRule(ctx, index):
-    index = int(index)-1
-    rules.pop(index)
-    rulesEmbed = discord.Embed(title='Rules List', color=discord.Color.dark_theme())
-    for index in range(len(rules)):
-        if len(rules[index]) == 2:
-            rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value=rules[index][1], inline=False)
-        else:
-            rulesEmbed.add_field(name=str(index+1) + '. ' + rules[index][0], value='-----', inline=False)
-    rulesChannel = bot.get_channel(rulesChannelID)
-    rulesMsg = await rulesChannel.fetch_message(id=rulesMsgID)
-    await rulesMsg.edit(embed=rulesEmbed)
+    rulesDF.pop(index)
+    for column in rulesDF.columns[int(index):]:
+        rulesDF.rename(columns={column: str(int(column)-1)}, inplace=True)
+    rulesEmbed = rulesEmbedUpdate()
+    await rulesUpdate(rulesEmbed)
     
 
 '''
