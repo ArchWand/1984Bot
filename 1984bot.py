@@ -4,14 +4,22 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 from discord.ext import commands
+import random
+from discord.ext.commands import has_permissions, MissingPermissions
+from discord.utils import get
+import re
+import math
 
+intents = discord.Intents.default()
+intents.members = True
 
 load_dotenv()
 token = os.getenv('discordToken')
 
-bot = commands.Bot(command_prefix=['1984bot, ', '$'])
+bot = commands.Bot(command_prefix=['1984bot, ', '$'], intents=intents)
 
-logChannelID = 851191799464984646
+logChannelID = 854619791376252932
+shoelaceID = 854619789572833283
 
 if os.path.exists('rules.csv') == True:
     rulesDF = pd.read_csv('rules.csv', sep=';')
@@ -25,8 +33,18 @@ else:
     blacklistDF = pd.DataFrame(index=(0, 1, 2), columns = ['ID', 'test'])
 
 
-
+newMemberKeys = []
 blacklistKeywords = ['testing']
+blacklistSuggestions = []
+
+for column in blacklistDF.columns[1:]:
+    try:
+        if math.isnan(blacklistDF.at[2, column]) == True:
+            continue
+    except:
+        keywords = re.split(' ', blacklistDF.at[2, column])
+        for word in keywords:
+            blacklistKeywords.append(word)
 
 @bot.event
 async def on_ready():
@@ -80,6 +98,7 @@ triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
 print('BLACKLIST GENERATED')
 
 @bot.command(name='secure', aliases = ['blCreate', 'bC'], help='ENSURE SAFETY OF ENVIRONMENT')
+@has_permissions(kick_members=True)
 async def blacklistCreator(ctx):
     #print('COMMAND RECEIVED')
     triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
@@ -93,6 +112,7 @@ async def blacklistCreator(ctx):
     blacklistDF.index.name = 'index'
 
 @bot.command(name='aggregate:', aliases = ['addBL', 'aB'], help='ADD SAFETY PARAMETERS')
+@has_permissions(kick_members=True)
 async def newBL(ctx, subject, descrip, field, *keywords):
     if field.lower() == 'trigger':
         field = 0
@@ -100,21 +120,24 @@ async def newBL(ctx, subject, descrip, field, *keywords):
         field = 1
     elif field.lower() == 'avoided':
         field = 2
+    else:
+        raise
     blacklistDF.at[0, subject] = descrip
     blacklistDF.at[1, subject] = field
     for keyword in keywords:
         blacklistKeywords.append(keyword)
-    sep = '+'
+    sep = ' '
     keywordJoined = sep.join(keywords)
     blacklistDF.at[2, subject] = keywordJoined
     triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
     await blUpdate(triggerEmbed, phobiaEmbed, atEmbed)
 
 @bot.command(name='diverge:', aliases = ['removeBL', 'rB'], help='REMOVE RESTRICTION')
+@has_permissions(kick_members=True)
 async def subtractBL(ctx, index):
     keywordJoined = blacklistDF.at[2, index]
     if isinstance(keywordJoined, str) == True:
-        keywords = keywordJoined.split('+')
+        keywords = keywordJoined.split(' ')
         for keyword in keywords:
             if keyword in blacklistKeywords:
                 blacklistKeywords.remove(keyword)
@@ -122,6 +145,31 @@ async def subtractBL(ctx, index):
     triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
     await blUpdate(triggerEmbed, phobiaEmbed, atEmbed)
 
+@bot.command(name='suggest', aliases=['blS', 'blacklistSuggestion'], help = 'COMMUNITY SOURCING')
+async def suggestBL(ctx, field, subject, *descrips):
+    if field.lower() != 'avoided':
+        if field.lower() != 'phobia':
+            if field.lower() != 'trigger':
+                await ctx.send('Incorrect field type. Reformat.')
+                return
+    
+    blSuggestEmbed = discord.Embed(title='New ' + field, color=discord.Color.dark_theme()) 
+    sep = ' '
+    blSuggestEmbed.add_field(name=subject, value=sep.join(descrips), inline=False)
+    blSuggestEmbed.set_author(name = ctx.author.name, icon_url=ctx.author.avatar_url)
+    logChannel = bot.get_channel(logChannelID)
+    message = await logChannel.send(embed=blSuggestEmbed)
+    await message.edit(content=str(message.id), embed=blSuggestEmbed)
+    blacklistSuggestions.append([message.id, subject, sep.join(descrips), field])
+
+@bot.command(name='accept', aliases=['blAcc', 'blacklistAccept'], help = 'VALIDATION AND APPROVAL')
+@has_permissions(kick_members=True)
+async def acceptBL(ctx, ID, *keywords):
+    for ticket in blacklistSuggestions:
+        if ticket[0] == int(ID):
+            await newBL(ctx, ticket[1], ticket[2], ticket[3], *keywords)
+            blacklistSuggestions.remove(ticket)
+            
 '''
 Rules structure
     Message containing rules
@@ -146,6 +194,7 @@ rulesEmbed = rulesEmbedUpdate()
 print('RULES GENERATED')
 
 @bot.command(name='administrate', aliases = ['rulesCreate', 'rC'], help='ESTABLISH LAW AND ORDER')
+@has_permissions(kick_members=True)
 async def rulesCreator(ctx):
     #print('COMMAND RECEIVED')
     rulesEmbed = rulesEmbedUpdate()
@@ -155,12 +204,13 @@ async def rulesCreator(ctx):
     rulesDF.index.name = 'index'
 
 @bot.command(name='directive:', aliases = ['addRule', 'aR'], help='EXPAND LEGISLATURE')
+@has_permissions(kick_members=True)
 async def newRule(ctx, mainRule, descrip, index=None):
     if index == None:
         index = len(rulesDF.columns)
     else:
         index = int(index)
-        for column in reversed(rulesDF.columns[index:]):
+        for column in reversed(sorted(rulesDF.columns[1:], key=int)[index-1:]):
             rulesDF.rename(columns={column: str(int(column)+1)}, inplace=True)
     rulesDF.at[0, str(index)] = mainRule
     rulesDF.at[1, str(index)] = descrip
@@ -168,9 +218,10 @@ async def newRule(ctx, mainRule, descrip, index=None):
     await rulesUpdate(rulesEmbed)
 
 @bot.command(name='removal:', aliases = ['removeRule', 'rR'], help='STREAMLINE LEGISLATURE')
+@has_permissions(kick_members=True)
 async def subtractRule(ctx, index):
     rulesDF.pop(index)
-    for column in rulesDF.columns[int(index):]:
+    for column in sorted(rulesDF.columns[1:], key=int)[int(index)-1:]:
         rulesDF.rename(columns={column: str(int(column)-1)}, inplace=True)
     rulesEmbed = rulesEmbedUpdate()
     await rulesUpdate(rulesEmbed)
@@ -189,6 +240,14 @@ async def on_message(message):
     await bot.process_commands(message)
     if message.author == bot.user:
         return
+    shoelaceChannel = bot.get_channel(shoelaceID)
+    if message.channel == shoelaceChannel:
+        for pair in newMemberKeys:
+            if message.author.id == pair[0]:
+                if message.content == str(pair[1]):
+                    role = get(message.guild.roles, name='Member')
+                    await message.author.add_roles(role)
+                    break
     violationList = []
     logChannel = bot.get_channel(logChannelID)
     for word in blacklistKeywords:
@@ -231,12 +290,37 @@ Join/Leave
     on leave, immortalize their shame.
 '''
 
+@bot.event
+async def on_member_join(member):
+    rulesEmbed = discord.Embed(title='Rules List', url='https://docs.google.com/document/d/1vqxfYxO2mtPh0O7rrgOTUx0UtW3a6vDyXjYclI2n5X8/edit?usp=sharing', color=discord.Color.dark_theme())
+    columns = sorted(rulesDF.columns[1:], key=int)
+    rand_index = random.randint(0, len(columns)-1)
+    randKey = random.randint(1000000, 9999999)
+    for index in range(len(columns)):
+        if rand_index == index:
+            if str(rulesDF.at[1, columns[index]]) == '-----':
+                rulesEmbed.add_field(name=str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value='To access the server, paste ' + str(randKey), inline=False)
+            else:
+                rulesEmbed.add_field(name=str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value=str(rulesDF.at[1, columns[index]]) + ' To access the server, paste ' + str(randKey), inline=False)
+        else:
+            rulesEmbed.add_field(name=str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value=str(rulesDF.at[1, columns[index]]), inline=False)
+    newMemberKeys.append([member.id, randKey])
+    await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a hidden key in the rules into #shoelaces or whatever it's called", embed=rulesEmbed)     
+    
+
 '''
 Reaction Roles
 lol no idea how this works
 '''
 
+@bot.command(name='disconnect', aliases = ['dc', 'logoff'], help = 'DEACTIVATE')
+@has_permissions(kick_members=True)
+async def disconnect(ctx):
+    rulesDF.to_csv('rules.csv', sep=';')
+    blacklistDF.to_csv('blacklist.csv', sep=';')
+    await bot.close()
+
 bot.run(token)
 
 
-    
+
