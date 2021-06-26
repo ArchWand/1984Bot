@@ -18,8 +18,8 @@ token = os.getenv('discordToken')
 
 bot = commands.Bot(command_prefix=['1984bot, ', '$'], intents=intents)
 
-logChannelID = 854619791376252932
-shoelaceID = 854619789572833283
+logChannelID = 829010774231744513
+shoelaceID = 843198731565662250
 
 if os.path.exists('rules.csv') == True:
     rulesDF = pd.read_csv('rules.csv', sep=';')
@@ -34,7 +34,7 @@ else:
 
 
 newMemberKeys = []
-blacklistKeywords = ['testing']
+blacklistKeywords = []
 blacklistSuggestions = []
 
 for column in blacklistDF.columns[1:]:
@@ -76,12 +76,14 @@ def blEmbedUpdate():
     atEmbed = discord.Embed(title='Avoided Topics', color=discord.Color.dark_theme())
     triggerEmbed = discord.Embed(title='Triggers', color=discord.Color.dark_theme())
     for column in sorted(blacklistDF.columns[1:]):
-        if blacklistDF.at[1, column] == 0:
+        if blacklistDF.at[1, column] == '0':
             triggerEmbed.add_field(name=str(column), value=str(blacklistDF.at[0, column]), inline=False)
-        if blacklistDF.at[1, column] == 1:
+        elif blacklistDF.at[1, column] == '1':
             phobiaEmbed.add_field(name=str(column), value=str(blacklistDF.at[0, column]), inline=False)
-        if blacklistDF.at[1, column] == 2:
+        elif blacklistDF.at[1, column] == '2':
             atEmbed.add_field(name=str(column), value=str(blacklistDF.at[0, column]), inline=False)
+        else:
+            print('FUCKED IT UP')
     return triggerEmbed, phobiaEmbed, atEmbed
 
 async def blUpdate(triggerEmbed, phobiaEmbed, atEmbed):
@@ -105,6 +107,8 @@ async def blacklistCreator(ctx):
     triggerMsg = await ctx.send(embed=triggerEmbed)
     phobiaMsg = await ctx.send(embed=phobiaEmbed)
     atMsg = await ctx.send(embed=atEmbed)
+    originalID = blacklistDF.columns[0]
+    blacklistDF.rename(columns={originalID: 'ID'}, inplace=True)
     blacklistDF.at[0, 'ID'] = triggerMsg.id
     blacklistDF.at[1, 'ID'] = phobiaMsg.id
     blacklistDF.at[2, 'ID'] = atMsg.id
@@ -115,11 +119,11 @@ async def blacklistCreator(ctx):
 @has_permissions(kick_members=True)
 async def newBL(ctx, subject, descrip, field, *keywords):
     if field.lower() == 'trigger':
-        field = 0
+        field = '0'
     elif field.lower() == 'phobia':
-        field = 1
+        field = '1'
     elif field.lower() == 'avoided':
-        field = 2
+        field = '2'
     else:
         raise
     blacklistDF.at[0, subject] = descrip
@@ -247,6 +251,9 @@ async def on_message(message):
                 if message.content == str(pair[1]):
                     role = get(message.guild.roles, name='Member')
                     await message.author.add_roles(role)
+                    embed = discord.Embed(title='New member', url=message.jump_url, description='Welcome to the server!', color = discord.Color.dark_gold())
+                    embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
+                    await shoelaceChannel.send(embed=embed)
                     break
     violationList = []
     logChannel = bot.get_channel(logChannelID)
@@ -305,7 +312,7 @@ async def on_member_join(member):
         else:
             rulesEmbed.add_field(name=str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value=str(rulesDF.at[1, columns[index]]), inline=False)
     newMemberKeys.append([member.id, randKey])
-    await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a hidden key in the rules into #shoelaces or whatever it's called", embed=rulesEmbed)     
+    await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed=rulesEmbed)     
     
 
 '''
