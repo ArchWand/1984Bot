@@ -271,6 +271,8 @@ async def on_message(message):
     embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
     await logChannel.send(embed=embed)
 
+    if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
+
 '''
 Cone/Ice
     log cone/ice update
