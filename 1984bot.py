@@ -20,6 +20,7 @@ bot = commands.Bot(command_prefix=['1984bot, ', '$'], intents=intents)
 
 logChannelID = 829010774231744513
 shoelaceID = 843198731565662250
+memberRoleID = 835601075541245952
 
 if os.path.exists('rules.csv') == True:
     rulesDF = pd.read_csv('rules.csv', sep=';')
@@ -249,7 +250,7 @@ async def on_message(message):
         for pair in newMemberKeys:
             if message.author.id == pair[0]:
                 if message.content == str(pair[1]):
-                    role = get(message.guild.roles, name='Member')
+                    role = get(message.guild.roles, id=memberRoleID)
                     await message.author.add_roles(role)
                     embed = discord.Embed(title='New member', url=message.jump_url, description='Welcome to the server!', color = discord.Color.dark_gold())
                     embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
@@ -270,6 +271,8 @@ async def on_message(message):
     embed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
     embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
     await logChannel.send(embed=embed)
+
+    if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
 
 '''
 Cone/Ice
