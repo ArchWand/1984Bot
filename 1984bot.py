@@ -257,6 +257,7 @@ async def on_message(message):
                     embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
                     await shoelaceChannel.send(embed=embed)
                     break
+    if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
     violationList = []
     logChannel = bot.get_channel(logChannelID)
     for word in blacklistKeywords:
@@ -272,8 +273,6 @@ async def on_message(message):
     embed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
     embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
     await logChannel.send(embed=embed)
-
-    if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
 
 '''
 Cone/Ice
@@ -316,8 +315,12 @@ async def on_member_join(member):
         else:
             rulesEmbed.add_field(name=str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value=str(rulesDF.at[1, columns[index]]), inline=False)
     newMemberKeys.append([member.id, randKey])
-    await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed=rulesEmbed)     
-    
+    try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed=rulesEmbed)     
+    except:
+        shoelaceChannel = bot.get_channel(shoelaceID)
+        embed = discord.Embed(title='Oops!', description="Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color=discord.Color.dark_theme())
+        embed.set_author(name = member.name, icon_url=member.avatar_url)
+        await shoelaceChannel.send(content= '<@'+str(member.id)+'>',embed=embed)
 
 '''
 Reaction Roles
@@ -332,6 +335,4 @@ async def disconnect(ctx):
     await bot.close()
 
 bot.run(token)
-
-
 
