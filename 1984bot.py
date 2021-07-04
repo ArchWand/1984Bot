@@ -161,7 +161,7 @@ async def suggestBL(ctx, field, subject, *descrips):
     blSuggestEmbed = discord.Embed(title='New ' + field, color=discord.Color.dark_theme()) 
     sep = ' '
     blSuggestEmbed.add_field(name=subject, value=sep.join(descrips), inline=False)
-    blSuggestEmbed.set_author(name = ctx.author.name, icon_url=ctx.author.avatar_url)
+    blSuggestEmbed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
     logChannel = bot.get_channel(logChannelID)
     message = await logChannel.send(embed=blSuggestEmbed)
     await message.edit(content=str(message.id), embed=blSuggestEmbed)
@@ -254,7 +254,7 @@ async def on_message(message):
                     if role is None: role = get(message.guild.roles, name='Member')
                     await message.author.add_roles(role)
                     embed = discord.Embed(title='New member', url=message.jump_url, description='Welcome to the server!', color = discord.Color.dark_gold())
-                    embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
+                    embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
                     await shoelaceChannel.send(embed=embed)
                     break
     if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
@@ -274,7 +274,7 @@ async def on_message(message):
         violation = 'Violation (Long Message)'
     alert = message.author.name + ' sent a message containing: ' + ', '.join(violationList)
     embed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
-    embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
+    embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
     await logChannel.send(embed=embed)
 
 '''
@@ -322,7 +322,7 @@ async def on_member_join(member):
     except:
         shoelaceChannel = bot.get_channel(shoelaceID)
         embed = discord.Embed(title='Oops!', description="Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color=discord.Color.dark_theme())
-        embed.set_author(name = member.name, icon_url=member.avatar_url)
+        embed.set_author(name=member.name, icon_url=member.avatar_url)
         await shoelaceChannel.send(content= '<@'+str(member.id)+'>',embed=embed)
 
 @bot.event
