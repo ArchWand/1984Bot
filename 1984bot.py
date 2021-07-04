@@ -265,6 +265,9 @@ async def on_message(message):
             violationList.append(word)
     if len(violationList) == 0:
         return
+    elif message.author.bot:
+        #print('BOT VIOLATION DETECTED')
+        return
     if len(message.content) < 128:
         violation = message.content
     else:
@@ -322,6 +325,14 @@ async def on_member_join(member):
         embed.set_author(name = member.name, icon_url=member.avatar_url)
         await shoelaceChannel.send(content= '<@'+str(member.id)+'>',embed=embed)
 
+@bot.event
+async def on_member_remove(member):
+    welcomeChannel = member.guild.system_channel
+    if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
+    leaveEmbed = discord.Embed(title='Goodbye!', description='<@'+str(member.id)+'> has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
+    leaveEmbed.set_author(name=member.name, icon_url=member.avatar_url)
+    await welcomeChannel.send(embed=leaveEmbed)
+    
 '''
 Reaction Roles
 lol no idea how this works
