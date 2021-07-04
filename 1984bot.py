@@ -318,6 +318,13 @@ async def on_member_join(member):
     newMemberKeys.append([member.id, randKey])
     await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed=rulesEmbed)     
     
+@bot.event
+async def on_member_remove(member):
+    welcomeChannel = member.guild.system_channel
+    if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
+    leaveEmbed = discord.Embed(title='Goodbye!', description='<@!{member.id}> has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
+    leaveEmbed.set_author(name=member.name, icon_url=member.avatar_url)
+    await welcomeChannel.send(embed=leaveEmbed)
 
 '''
 Reaction Roles
