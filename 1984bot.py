@@ -253,9 +253,9 @@ async def on_message(message):
                     role = get(message.guild.roles, id=memberRoleID)
                     if role is None: role = get(message.guild.roles, name='Member')
                     await message.author.add_roles(role)
-                    embed = discord.Embed(title='New member', url=message.jump_url, description='Welcome to the server!', color = discord.Color.dark_gold())
-                    embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-                    await shoelaceChannel.send(embed=embed)
+                    welcomeEmbed = discord.Embed(title='New member', url=message.jump_url, description='Welcome to the server!', color = discord.Color.dark_gold())
+                    welcomeEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+                    await shoelaceChannel.send(embed=welcomeEmbed)
                     break
     if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
     violationList = []
@@ -273,9 +273,9 @@ async def on_message(message):
     else:
         violation = 'Violation (Long Message)'
     alert = message.author.name + ' sent a message containing: ' + ', '.join(violationList)
-    embed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
-    embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-    await logChannel.send(embed=embed)
+    violationEmbed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
+    violationEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+    await logChannel.send(embed=violationEmbed)
 
 '''
 Cone/Ice
