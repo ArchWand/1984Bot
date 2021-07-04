@@ -251,6 +251,7 @@ async def on_message(message):
             if message.author.id == pair[0]:
                 if message.content == str(pair[1]):
                     role = get(message.guild.roles, id=memberRoleID)
+                    if role is None: role = get(message.guild.roles, name='Member')
                     await message.author.add_roles(role)
                     embed = discord.Embed(title='New member', url=message.jump_url, description='Welcome to the server!', color = discord.Color.dark_gold())
                     embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
