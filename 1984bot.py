@@ -263,16 +263,15 @@ async def on_message(message):
     for word in blacklistKeywords:
         if word.lower() in message.content.lower():
             violationList.append(word)
-    if len(violationList) == 0:
-        return
-    if len(message.content) < 128:
-        violation = message.content
-    else:
-        violation = 'Violation (Long Message)'
-    alert = message.author.name + ' sent a message containing: ' + ', '.join(violationList)
-    violationEmbed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
-    violationEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-    await logChannel.send(embed=violationEmbed)
+    if len(violationList) > 0:
+        if len(message.content) < 128:
+            violation = message.content
+        else:
+            violation = 'Violation (Long Message)'
+        alert = message.author.name + ' sent a message containing: ' + ', '.join(violationList)
+        violationEmbed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
+        violationEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+        await logChannel.send(embed=violationEmbed)
 
 '''
 Cone/Ice
