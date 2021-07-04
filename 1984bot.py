@@ -21,6 +21,7 @@ bot = commands.Bot(command_prefix=['1984bot, ', '$'], intents=intents)
 logChannelID = 829010774231744513
 shoelaceID = 843198731565662250
 memberRoleID = 835601075541245952
+ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210]
 
 if os.path.exists('rules.csv') == True:
     rulesDF = pd.read_csv('rules.csv', sep=';')
@@ -258,24 +259,26 @@ async def on_message(message):
                     await shoelaceChannel.send(embed=embed)
                     break
     if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
-    violationList = []
-    logChannel = bot.get_channel(logChannelID)
-    for word in blacklistKeywords:
-        if word.lower() in message.content.lower():
-            violationList.append(word)
-    if len(violationList) == 0:
-        return
-    elif message.author.bot:
-        #print('BOT VIOLATION DETECTED')
-        return
-    if len(message.content) < 128:
-        violation = message.content
-    else:
-        violation = 'Violation (Long Message)'
-    alert = message.author.name + ' sent a message containing: ' + ', '.join(violationList)
-    embed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
-    embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
-    await logChannel.send(embed=embed)
+    
+    if message.channel.id not in ignoredChannels:
+        violationList = []
+        logChannel = bot.get_channel(logChannelID)
+        for word in blacklistKeywords:
+            if word.lower() in message.content.lower():
+                violationList.append(word)
+        if len(violationList) == 0:
+            return
+        elif message.author.bot:
+            #print('BOT VIOLATION DETECTED')
+            return
+        if len(message.content) < 128:
+            violation = message.content
+        else:
+            violation = 'Violation (Long Message)'
+        alert = message.author.name + ' sent a message containing: ' + ', '.join(violationList)
+        embed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
+        embed.set_author(name = message.author.name, icon_url=message.author.avatar_url)
+        await logChannel.send(embed=embed)
 
 '''
 Cone/Ice
