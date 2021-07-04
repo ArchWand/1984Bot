@@ -263,16 +263,16 @@ async def on_message(message):
     for word in blacklistKeywords:
         if word.lower() in message.content.lower():
             violationList.append(word)
-    if len(violationList) == 0:
-        return
-    if len(message.content) < 128:
-        violation = message.content
-    else:
-        violation = 'Violation (Long Message)'
-    alert = message.author.name + ' sent a message containing: ' + ', '.join(violationList)
-    violationEmbed = discord.Embed(title=violation, url=message.jump_url, description=alert, color = discord.Color.dark_gold())
-    violationEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-    await logChannel.send(embed=violationEmbed)
+    if len(violationList) > 0:
+        violation = message.content[:128]
+        for word in violationList:
+            violation = re.sub(word, '['+word+']('+message.jump_url+')', violation)
+        if len(message.content) > 128: violation += '...\n[See more ...](\('+message.jump_url+'\))'
+        alert = message.author.name + ' sent [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
+        violationEmbed = discord.Embed(title='Violation: ' + ', '.join(violationList), url=message.jump_url, description=violation, color = discord.Color.dark_gold())
+        violationEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+        violationEmbed.add_field(name='\u200b', value=alert, inline=True)
+        await logChannel.send(embed=violationEmbed)
 
 '''
 Cone/Ice
