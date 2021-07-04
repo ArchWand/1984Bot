@@ -100,7 +100,7 @@ async def blUpdate(triggerEmbed, phobiaEmbed, atEmbed):
 triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
 print('BLACKLIST GENERATED')
 
-@bot.command(name='secure', aliases = ['blCreate', 'bC'], help='ENSURE SAFETY OF ENVIRONMENT')
+@bot.command(name='secure', aliases = ['blCreate', 'bC', 'blacklist', 'blacklistCreate'], help='ENSURE SAFETY OF ENVIRONMENT')
 @has_permissions(kick_members=True)
 async def blacklistCreator(ctx):
     #print('COMMAND RECEIVED')
@@ -116,7 +116,7 @@ async def blacklistCreator(ctx):
     blacklistDF.rename(columns={'ID': str(ctx.channel.id)}, inplace=True)
     blacklistDF.index.name = 'index'
 
-@bot.command(name='aggregate:', aliases = ['addBL', 'aB'], help='ADD SAFETY PARAMETERS')
+@bot.command(name='aggregate:', aliases = ['addBL', 'aB', 'addBlacklist'], help='ADD SAFETY PARAMETERS')
 @has_permissions(kick_members=True)
 async def newBL(ctx, subject, descrip, field, *keywords):
     if field.lower() == 'trigger':
@@ -137,7 +137,7 @@ async def newBL(ctx, subject, descrip, field, *keywords):
     triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
     await blUpdate(triggerEmbed, phobiaEmbed, atEmbed)
 
-@bot.command(name='diverge:', aliases = ['removeBL', 'rB'], help='REMOVE RESTRICTION')
+@bot.command(name='diverge:', aliases = ['removeBL', 'rB', 'removeBlacklist', 'delBlacklist', 'deleteBlacklist'], help='REMOVE RESTRICTION')
 @has_permissions(kick_members=True)
 async def subtractBL(ctx, index):
     keywordJoined = blacklistDF.at[2, index]
@@ -150,7 +150,7 @@ async def subtractBL(ctx, index):
     triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
     await blUpdate(triggerEmbed, phobiaEmbed, atEmbed)
 
-@bot.command(name='suggest', aliases=['blS', 'blacklistSuggestion'], help = 'COMMUNITY SOURCING')
+@bot.command(name='suggest', aliases=['blS', 'blSuggest', 'blacklistSuggestion'], help = 'COMMUNITY SOURCING')
 async def suggestBL(ctx, field, subject, *descrips):
     if field.lower() != 'avoided':
         if field.lower() != 'phobia':
@@ -167,7 +167,7 @@ async def suggestBL(ctx, field, subject, *descrips):
     await message.edit(content=str(message.id), embed=blSuggestEmbed)
     blacklistSuggestions.append([message.id, subject, sep.join(descrips), field])
 
-@bot.command(name='accept', aliases=['blAcc', 'blacklistAccept'], help = 'VALIDATION AND APPROVAL')
+@bot.command(name='accept', aliases=['blAcc', 'blAccept' 'blacklistAccept'], help = 'VALIDATION AND APPROVAL')
 @has_permissions(kick_members=True)
 async def acceptBL(ctx, ID, *keywords):
     for ticket in blacklistSuggestions:
@@ -198,7 +198,7 @@ async def rulesUpdate(rulesEmbed):
 rulesEmbed = rulesEmbedUpdate()
 print('RULES GENERATED')
 
-@bot.command(name='administrate', aliases = ['rulesCreate', 'rC'], help='ESTABLISH LAW AND ORDER')
+@bot.command(name='administrate', aliases = ['rulesCreate', 'rC', 'rules'], help='ESTABLISH LAW AND ORDER')
 @has_permissions(kick_members=True)
 async def rulesCreator(ctx):
     #print('COMMAND RECEIVED')
@@ -222,7 +222,7 @@ async def newRule(ctx, mainRule, descrip, index=None):
     rulesEmbed = rulesEmbedUpdate()
     await rulesUpdate(rulesEmbed)
 
-@bot.command(name='removal:', aliases = ['removeRule', 'rR'], help='STREAMLINE LEGISLATURE')
+@bot.command(name='removal:', aliases = ['removeRule', 'rR', 'delRule', 'deleteRule', 'subtractRule'], help='STREAMLINE LEGISLATURE')
 @has_permissions(kick_members=True)
 async def subtractRule(ctx, index):
     rulesDF.pop(index)
