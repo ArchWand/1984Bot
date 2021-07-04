@@ -243,7 +243,7 @@ Word Highlight
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
-    if message.author == bot.user:
+    if message.author == bot.user or message.author.bot:
         return
     shoelaceChannel = bot.get_channel(shoelaceID)
     if message.channel == shoelaceChannel:
@@ -264,9 +264,6 @@ async def on_message(message):
         if word.lower() in message.content.lower():
             violationList.append(word)
     if len(violationList) == 0:
-        return
-    elif message.author.bot:
-        #print('BOT VIOLATION DETECTED')
         return
     if len(message.content) < 128:
         violation = message.content
