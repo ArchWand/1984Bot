@@ -2,6 +2,7 @@ import discord
 import numpy as np
 import pandas as pd
 import os
+import sys
 from dotenv import load_dotenv
 from discord.ext import commands
 import random
@@ -341,6 +342,11 @@ lol no idea how this works
 @bot.command(name='ping', help = 'MONITOR CONNECTION')
 async def ping(ctx):
     await ctx.send('Ping is ' + str(bot.latency) + 'ms')
+
+@bot.command(name='reload', aliases = ['f5', 'refresh'], help = 'RELOAD')
+async def reload(ctx):
+    print('RELOADING')
+    os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
 @bot.command(name='disconnect', aliases = ['dc', 'logoff'], help = 'DEACTIVATE')
 @has_permissions(kick_members=True)
