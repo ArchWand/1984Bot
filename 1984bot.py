@@ -343,7 +343,7 @@ lol no idea how this works
 
 @bot.command(name='ping', help = 'MONITOR CONNECTION')
 async def ping(ctx):
-    await ctx.send('Ping is ' + bot.latency)
+    await ctx.send('Ping is ' + str(bot.latency) + 'ms')
 
 @bot.command(name='disconnect', aliases = ['dc', 'logoff'], help = 'DEACTIVATE')
 @has_permissions(kick_members=True)
