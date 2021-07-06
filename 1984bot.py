@@ -169,7 +169,7 @@ async def suggestBL(ctx, field, subject, *descrips):
     await message.edit(content = str(message.id), embed = blSuggestEmbed)
     blacklistSuggestions.append([message.id, subject, sep.join(descrips), field])
 
-@bot.command(name = 'accept', aliases = ['blAcc', 'blAccept' 'blacklistAccept'], help = 'VALIDATION AND APPROVAL')
+@bot.command(name = 'accept', aliases = ['blAcc', 'blAccept', 'blacklistAccept'], help = 'VALIDATION AND APPROVAL')
 @has_permissions(kick_members = True)
 async def acceptBL(ctx, ID, *keywords):
     for ticket in blacklistSuggestions:
@@ -259,19 +259,20 @@ async def on_message(message):
                     welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
                     await shoelaceChannel.send(embed = welcomeEmbed)
                     break
-    if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
+    content = re.sub('​', '', message.content)
+    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
     
     if message.channel.id not in ignoredChannels:
         violationList = []
         logChannel = bot.get_channel(logChannelID)
         for word in blacklistKeywords:
-            if word.lower() in message.content.lower():
+            if word.lower() in content.lower():
                 violationList.append(word)
         if len(violationList) > 0:
-            violation = message.content[:128]
+            violation = content[:128]
             for word in violationList:
                 violation = re.sub(word, '['+word+']('+message.jump_url+')', violation)
-            if len(message.content) > 128: violation += '...\n[See more ...](\('+message.jump_url+'\))'
+            if len(content) > 128: violation += '...\n[See more ...](\('+message.jump_url+'\))'
             alert = message.author.name + ' sent [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
             violationEmbed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
             violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
