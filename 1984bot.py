@@ -21,6 +21,7 @@ bot = commands.Bot(command_prefix=['1984bot, ', '$'], intents=intents)
 logChannelID = 829010774231744513
 shoelaceID = 843198731565662250
 memberRoleID = 835601075541245952
+ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210]
 
 if os.path.exists('rules.csv') == True:
     rulesDF = pd.read_csv('rules.csv', sep=';')
@@ -258,21 +259,23 @@ async def on_message(message):
                     await shoelaceChannel.send(embed=welcomeEmbed)
                     break
     if 'bep' in message.content: await message.add_reaction(bot.get_emoji(824743021434241054))
-    violationList = []
-    logChannel = bot.get_channel(logChannelID)
-    for word in blacklistKeywords:
-        if word.lower() in message.content.lower():
-            violationList.append(word)
-    if len(violationList) > 0:
-        violation = message.content[:128]
-        for word in violationList:
-            violation = re.sub(word, '['+word+']('+message.jump_url+')', violation)
-        if len(message.content) > 128: violation += '...\n[See more ...](\('+message.jump_url+'\))'
-        alert = message.author.name + ' sent [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
-        violationEmbed = discord.Embed(title='Violation: ' + ', '.join(violationList), url=message.jump_url, description=violation, color = discord.Color.dark_gold())
-        violationEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-        violationEmbed.add_field(name='\u200b', value=alert, inline=True)
-        await logChannel.send(embed=violationEmbed)
+    
+    if message.channel.id not in ignoredChannels:
+        violationList = []
+        logChannel = bot.get_channel(logChannelID)
+        for word in blacklistKeywords:
+            if word.lower() in message.content.lower():
+                violationList.append(word)
+        if len(violationList) > 0:
+            violation = message.content[:128]
+            for word in violationList:
+                violation = re.sub(word, '['+word+']('+message.jump_url+')', violation)
+            if len(message.content) > 128: violation += '...\n[See more ...](\('+message.jump_url+'\))'
+            alert = message.author.name + ' sent [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
+            violationEmbed = discord.Embed(title='Violation: ' + ', '.join(violationList), url=message.jump_url, description=violation, color = discord.Color.dark_gold())
+            violationEmbed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+            violationEmbed.add_field(name='\u200b', value=alert, inline=True)
+            await logChannel.send(embed=violationEmbed)
 
 '''
 Cone/Ice
@@ -334,6 +337,10 @@ async def on_member_remove(member):
 Reaction Roles
 lol no idea how this works
 '''
+
+@bot.command(name='ping', help = 'MONITOR CONNECTION')
+async def ping(ctx):
+    await ctx.send('Ping is ' + str(bot.latency) + 'ms')
 
 @bot.command(name='disconnect', aliases = ['dc', 'logoff'], help = 'DEACTIVATE')
 @has_permissions(kick_members=True)
