@@ -49,6 +49,9 @@ for column in blacklistDF.columns[1:]:
         for word in keywords:
             blacklistKeywords.append(word)
 
+def admin(ctx):
+    return ctx.message.author.id == 198200248634572811 or ctx.message.author.id == 474008865600438292
+
 @bot.event
 async def on_ready():
     print('ONLINE')
