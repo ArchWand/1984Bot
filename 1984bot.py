@@ -255,7 +255,7 @@ async def on_message(message):
                     role = get(message.guild.roles, id = memberRoleID)
                     if role is None: role = get(message.guild.roles, name = 'Member')
                     await message.author.add_roles(role)
-                    welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+message.author.id+'>!', color = discord.Color.dark_gold())
+                    welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
                     welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
                     await shoelaceChannel.send(embed = welcomeEmbed)
                     break
@@ -271,10 +271,12 @@ async def on_message(message):
         if len(violationList) > 0:
             violation = content[:128]
             for word in violationList:
-                violation = re.sub(word, '['+word+']('+message.jump_url+')', violation)
-            if len(content) > 128: violation += '...\n[See more ...](\('+message.jump_url+'\))'
+                matches = re.findall(word, violation, flags=re.I)
+                for match in list(set(matches)):
+                    violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)
+            if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'
             alert = message.author.name + ' sent [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
-            violationEmbed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
+            violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
             violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
             violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
             await logChannel.send(embed = violationEmbed)
@@ -342,7 +344,7 @@ lol no idea how this works
 
 @bot.command(name='ping', help = 'MONITOR CONNECTION')
 async def ping(ctx):
-    await ctx.send('Ping is ' + str(bot.latency) + 'ms')
+    await ctx.send('Ping is ' + str(np.round(1000*bot.latency, 2)) + 'ms')
 
 @bot.command(name = 'reload', aliases = ['f5', 'refresh'], help = 'RELOAD')
 async def reload(ctx):
@@ -357,4 +359,3 @@ async def disconnect(ctx):
     await bot.close()
 
 bot.run(token)
-
