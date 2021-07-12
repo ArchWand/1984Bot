@@ -259,7 +259,7 @@ async def on_message(message):
                     welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
                     await shoelaceChannel.send(embed = welcomeEmbed)
                     break
-    content = re.sub('​', '', message.content)
+    content = re.sub('[^\x20-\x7F]', '', message.content)
     if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
     
     if message.channel.id not in ignoredChannels:
