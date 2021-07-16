@@ -243,7 +243,7 @@ Word Highlight
 '''
 
 def parseContent(message):
-    string = message.content.lower
+    string = message.content.lower()
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
         '\u200B-\u200F\u2028-\u2029\uFEFF': '', # Zero-width characters
@@ -265,26 +265,26 @@ def parseContent(message):
         ':a:': 'a',
         ':b:': 'b',
         ':o2:': 'o',
-        ':regional_indicator_a:': 'a',
-        ':regional_indicator_b:': 'b',
-        ':regional_indicator_c:': 'c',
-        ':regional_indicator_d:': 'd',
-        ':regional_indicator_e:': 'e',
-        ':regional_indicator_f:': 'f',
-        ':regional_indicator_g:': 'g',
-        ':regional_indicator_h:': 'h',
-        ':regional_indicator_i:': 'i',
-        ':regional_indicator_j:': 'j',
-        ':regional_indicator_k:': 'k',
-        ':regional_indicator_l:': 'l',
-        ':regional_indicator_m:': 'm',
-        ':regional_indicator_n:': 'n',
-        ':regional_indicator_o:': 'o',
-        ':regional_indicator_p:': 'p',
-        ':regional_indicator_q:': 'q',
-        ':regional_indicator_r:': 'r',
-        ':regional_indicator_s:': 's',
-        ':regional_indicator_t:': 't',
+        '\U0001f1e6': 'a',
+        '\U0001f1e7': 'b',
+        '\U0001f1e8': 'c',
+        '\U0001f1e9': 'd',
+        '\U0001f1ea': 'e',
+        '\U0001f1eb': 'f',
+        '\U0001f1ec': 'g',
+        '\U0001f1ed': 'h',
+        '\U0001f1ee': 'i',
+        '\U0001f1ef': 'j',
+        '\U0001f1f0': 'k',
+        '\U0001f1f1': 'l',
+        '\U0001f1f2': 'm',
+        '\U0001f1f3': 'n',
+        '\U0001f1f4': 'o',
+        '\U0001f1f5': 'p',
+        '\U0001f1f6': 'q',
+        '\U0001f1f7': 'r',
+        '\U0001f1f8': 's',
+        '\U0001f1f9': 't',
         ':regional_indicator_u:': 'u',
         ':regional_indicator_v:': 'v',
         ':regional_indicator_w:': 'w',
@@ -311,7 +311,7 @@ def parseContent(message):
         ' ': ' '
     }
 
-    for replaceFrom, replaceTo in replaceDict:
+    for replaceFrom, replaceTo in replaceDict.items():
         string = re.sub(replaceFrom, replaceTo, string)
 
     return string
