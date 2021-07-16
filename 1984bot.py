@@ -23,6 +23,7 @@ logChannelID = 829010774231744513
 shoelaceID = 843198731565662250
 memberRoleID = 835601075541245952
 ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210]
+noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
 
 if os.path.exists('rules.csv') == True:
     rulesDF = pd.read_csv('rules.csv', sep = ';')
@@ -241,6 +242,11 @@ Word Highlight
             violationList.append(keyword)
     send message in mod channel "message (copy) violates these keywords: [violationList]"
 '''
+
+async def randUptumblr(message):
+    if message.channel.id in noUptumblr: return
+    if random.random() < 0.01:
+        await message.add_reaction("<:uptumblr:810019271215677441>")
 
 async def beppening(message):	
     content = parseContent(message)	
