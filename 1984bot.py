@@ -247,16 +247,15 @@ async def indoctrination(message):
     shoelaceChannel = bot.get_channel(shoelaceID)
     if not message.channel == shoelaceChannel: return
     for pair in newMemberKeys:
-        if message.author.id == pair[0]:
-            if message.content == str(pair[1]):
-                role = get(message.guild.roles, id = memberRoleID)
-                if role is None: role = get(message.guild.roles, name = 'Member')
-                await message.author.add_roles(role)
-                welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
-                welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-                await shoelaceChannel.send(embed = welcomeEmbed)
-                newMemberKeys.remove(pair)
-                break
+        if message.author.id == pair[0] and message.content == str(pair[1]):
+            role = get(message.guild.roles, id = memberRoleID)
+            if role is None: role = get(message.guild.roles, name = 'Member')
+            await message.author.add_roles(role)
+            welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
+            welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
+            await shoelaceChannel.send(embed = welcomeEmbed)
+            newMemberKeys.remove(pair)
+            break
 
 async def randUptumblr(message):
     if message.channel.id in noUptumblr: return
@@ -342,7 +341,7 @@ def parseContent(message):
         string = re.sub(replaceFrom, replaceTo, string)
     return string
 
-def logViolation(message, fromEvent = 'sent'):
+async def logViolation(message, fromEvent = 'sent'):
     logChannel = bot.get_channel(logChannelID)
     content = parseContent(message)
     if message.channel.id in ignoredChannels: return
