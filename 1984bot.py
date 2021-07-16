@@ -118,81 +118,6 @@ async def blacklistCreator(ctx):
     blacklistDF.rename(columns = {'ID': str(ctx.channel.id)}, inplace = True)
     blacklistDF.index.name = 'index'
 
-def parseContent(message):
-    string = message.content.lower
-    # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
-    replaceDict = {
-        '\u200B-\u200F\u2028-\u2029\uFEFF': '', # Zero-width characters
-        '1': 'i',
-        '3': 'e',
-        '4': 'a',
-        '5': 's',
-        'ñ': 'n',
-        '7': 't',
-        '0': 'o',
-        '8': 'b',
-        '&': 'and',
-        'wanna': 'want to',
-        '(?<!yo)ur': 'your',
-        '-': ' ',
-        '–': ' ',
-        '—': ' ',
-        '_': ' ',
-        ':a:': 'a',
-        ':b:': 'b',
-        ':o2:': 'o',
-        ':regional_indicator_a:': 'a',
-        ':regional_indicator_b:': 'b',
-        ':regional_indicator_c:': 'c',
-        ':regional_indicator_d:': 'd',
-        ':regional_indicator_e:': 'e',
-        ':regional_indicator_f:': 'f',
-        ':regional_indicator_g:': 'g',
-        ':regional_indicator_h:': 'h',
-        ':regional_indicator_i:': 'i',
-        ':regional_indicator_j:': 'j',
-        ':regional_indicator_k:': 'k',
-        ':regional_indicator_l:': 'l',
-        ':regional_indicator_m:': 'm',
-        ':regional_indicator_n:': 'n',
-        ':regional_indicator_o:': 'o',
-        ':regional_indicator_p:': 'p',
-        ':regional_indicator_q:': 'q',
-        ':regional_indicator_r:': 'r',
-        ':regional_indicator_s:': 's',
-        ':regional_indicator_t:': 't',
-        ':regional_indicator_u:': 'u',
-        ':regional_indicator_v:': 'v',
-        ':regional_indicator_w:': 'w',
-        ':regional_indicator_x:': 'x',
-        ':regional_indicator_y:': 'y',
-        ':regional_indicator_z:': 'z',
-        ':star_and_crescent:': 'c',
-        ':three:': 'e',
-        ':pisces:': 'h',
-        ':information_source:': 'i',
-        ':one:': 'l',
-        ':virgo:': 'm',
-        ':scorpius:': 'm',
-        ':capricorn:': 'n',
-        ':o:': 'o',
-        ':zero:': 'o',
-        ':parking:': 'p',
-        ':five:': 's',
-        ':cross:': 't',
-        ':orthodox_cross:': 't',
-        ':ophiuchus:': 'u',
-        ':aries:': 'v',
-        ' ': ' ',
-        ' ': ' '
-    }
-    
-    string = string.lower
-    for replaceFrom, replaceTo in replaceDict:
-        string = re.sub(replaceFrom, replaceTo, string)
-    
-    return string
-
 @bot.command(name = 'aggregate:', aliases = ['addBL', 'aB', 'addBlacklist'], help = 'ADD SAFETY PARAMETERS')
 @has_permissions(kick_members = True)
 async def newBL(ctx, subject, descrip, field, *keywords):
@@ -316,6 +241,81 @@ Word Highlight
             violationList.append(keyword)
     send message in mod channel "message (copy) violates these keywords: [violationList]"
 '''
+
+def parseContent(message):
+    string = message.content.lower
+    # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
+    replaceDict = {
+        '\u200B-\u200F\u2028-\u2029\uFEFF': '', # Zero-width characters
+        '1': 'i',
+        '3': 'e',
+        '4': 'a',
+        '5': 's',
+        'ñ': 'n',
+        '7': 't',
+        '0': 'o',
+        '8': 'b',
+        '&': 'and',
+        'wanna': 'want to',
+        '(?<!yo)ur': 'your',
+        '-': ' ',
+        '–': ' ',
+        '—': ' ',
+        '_': ' ',
+        ':a:': 'a',
+        ':b:': 'b',
+        ':o2:': 'o',
+        ':regional_indicator_a:': 'a',
+        ':regional_indicator_b:': 'b',
+        ':regional_indicator_c:': 'c',
+        ':regional_indicator_d:': 'd',
+        ':regional_indicator_e:': 'e',
+        ':regional_indicator_f:': 'f',
+        ':regional_indicator_g:': 'g',
+        ':regional_indicator_h:': 'h',
+        ':regional_indicator_i:': 'i',
+        ':regional_indicator_j:': 'j',
+        ':regional_indicator_k:': 'k',
+        ':regional_indicator_l:': 'l',
+        ':regional_indicator_m:': 'm',
+        ':regional_indicator_n:': 'n',
+        ':regional_indicator_o:': 'o',
+        ':regional_indicator_p:': 'p',
+        ':regional_indicator_q:': 'q',
+        ':regional_indicator_r:': 'r',
+        ':regional_indicator_s:': 's',
+        ':regional_indicator_t:': 't',
+        ':regional_indicator_u:': 'u',
+        ':regional_indicator_v:': 'v',
+        ':regional_indicator_w:': 'w',
+        ':regional_indicator_x:': 'x',
+        ':regional_indicator_y:': 'y',
+        ':regional_indicator_z:': 'z',
+        ':star_and_crescent:': 'c',
+        ':three:': 'e',
+        ':pisces:': 'h',
+        ':information_source:': 'i',
+        ':one:': 'l',
+        ':virgo:': 'm',
+        ':scorpius:': 'm',
+        ':capricorn:': 'n',
+        ':o:': 'o',
+        ':zero:': 'o',
+        ':parking:': 'p',
+        ':five:': 's',
+        ':cross:': 't',
+        ':orthodox_cross:': 't',
+        ':ophiuchus:': 'u',
+        ':aries:': 'v',
+        ' ': ' ',
+        ' ': ' '
+    }
+
+    string = string.lower
+    for replaceFrom, replaceTo in replaceDict:
+        string = re.sub(replaceFrom, replaceTo, string)
+
+    return string
 
 @bot.event
 async def on_message(message):
