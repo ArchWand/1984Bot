@@ -52,6 +52,84 @@ for column in blacklistDF.columns[1:]:
 @bot.event
 async def on_ready():
     print('ONLINE')
+    
+async def on_message(self, message):
+    if message.author == client.user:
+       return
+    string = message.content.lower
+    stringArr = ['place', 'triggers', 'here']
+    #All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
+    replaceDict = {
+        '1': 'i',
+        '3': 'e',
+        '4': 'a',
+        '5': 's',
+        'ñ': 'n',
+        '7': 't',
+        '0': 'o',
+        '8': 'b',
+        '&': 'and',
+        'z': 's',
+        'wanna': 'want to',
+        'your': '👇',
+        'ur': 'your',
+        '👇': 'your',
+        '-': ' ',
+        '–': ' ',
+        '—': ' ',
+        '_': ' ',
+        '🅰': 'a',
+        '🅱': 'b',
+        '🅾': 'o',
+        '🇦': 'a',
+        '🇧': 'b',
+        '🇨': 'c',
+        '🇩': 'd',
+        '🇪': 'e',
+        '🇫': 'f',
+        '🇬': 'g',
+        '🇭': 'h',
+        '🇮': 'i',
+        '🇯': 'j',
+        '🇰': 'k',
+        '🇱': 'l',
+        '🇲': 'm',
+        '🇳': 'n',
+        '🇴': 'o',
+        '🇵': 'p',
+        '🇶': 'q',
+        '🇷': 'r',
+        '🇸': 's',
+        '🇹': 't',
+        '🇺': 'u',
+        '🇻': 'v',
+        '🇼': 'w',
+        '🇽': 'x',
+        '🇾': 'y',
+        '🇿': 'z',
+        '✝': 't',
+        ' ': ' ',
+        ' ': ' '
+    }
+    
+    for replaceFrom, replaceTo in replaceDict:
+        string = re.sub(replaceFrom, replaceTo, string)
+
+    #Splits the message content into an array, tests if elements of the array are blacklisted words and then does stuff
+    commonElements = []
+    stringSplit = string.split()
+    for trigger in stringArr:
+        for Str in stringSplit:
+            if Str == trigger:
+                commonElements.append(True)
+
+    commonElementsLength = len(commonElements)
+    
+    if commonElementsLength > 0: #If a blacklisted word was found, do stuff below here!
+        await message.delete()
+        embedVar = discord.Embed(title='Trigger Detected!', description='Please remember to spoiler messages from the blacklist!')
+        embedVar.add_field(name=f'Author: {message.author.name}#{message.author.discriminator}', value='||' + message.content + '||')
+        await message.channel.send(embed=embedVar)
 
 '''
 DISCORD BOT
@@ -258,6 +336,7 @@ async def on_message(message):
                     welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
                     welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
                     await shoelaceChannel.send(embed = welcomeEmbed)
+                    newMemberKeys.remove(pair)
                     break
     content = re.sub('[^\x20-\x7F]', '', message.content)
     if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
@@ -281,6 +360,32 @@ async def on_message(message):
             violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
             await logChannel.send(embed = violationEmbed)
 
+@bot.event
+async def on_raw_message_edit(payload):
+    shoelaceChannel = bot.get_channel(shoelaceID)
+    content = payload.data['content']
+    content = re.sub('​', '', content)
+    message = await bot.get_channel(payload.channel_id).fetch_message(id = payload.message_id)
+    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
+    if message.channel.id not in ignoredChannels:
+        violationList = []
+        logChannel = bot.get_channel(logChannelID)
+        for word in blacklistKeywords:
+            if word.lower() in content.lower():
+                violationList.append(word)
+        if len(violationList) > 0:
+            violation = content[:128]
+            for word in violationList:
+                matches = re.findall(word, violation, flags=re.I)
+                for match in list(set(matches)):
+                    violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)
+            if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'
+            alert = message.author.name + ' edited [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
+            editViolationEmbed = discord.Embed(title = '**Edit Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
+            editViolationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
+            editViolationEmbed.add_field(name = '\u200b', value = alert, inline = True)
+            await logChannel.send(embed = editViolationEmbed)
+    
 '''
 Cone/Ice
     log cone/ice update
@@ -329,6 +434,39 @@ async def on_member_join(member):
         embed.set_author(name = member.name, icon_url = member.avatar_url)
         await shoelaceChannel.send(content = '<@'+str(member.id)+'>',embed = embed)
 
+@bot.command(name = 'resend', aliases = ['rS', 'resendWelcome'], help = 'REPEAT DECONTAMINATION PROCEDURES')
+async def resend(ctx, ID = None):
+    if ID == None:
+        member = ctx.author
+    else: member = bot.get_user(int(ID))
+    rulesEmbed = discord.Embed(title = 'Rules List', url = 'https://docs.google.com/document/d/1vqxfYxO2mtPh0O7rrgOTUx0UtW3a6vDyXjYclI2n5X8/edit?usp=sharing', color = discord.Color.dark_theme())
+    columns = sorted(rulesDF.columns[1:], key = int)
+    rand_index = random.randint(0, len(columns)-1)
+    randKey = random.randint(1000000, 9999999)
+    for index in range(len(columns)):
+        if rand_index == index:
+            if str(rulesDF.at[1, columns[index]]) == '-----':
+                rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = 'To access the server, paste ' + str(randKey), inline = False)
+            else:
+                rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]) + ' To access the server, paste ' + str(randKey), inline = False)
+        else:
+            rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]), inline = False)
+    newMemberKeys.append([member.id, randKey])
+    try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
+    except:
+        shoelaceChannel = bot.get_channel(shoelaceID)
+        brokenEmbed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
+        brokenEmbed.set_author(name = member.name, icon_url = member.avatar_url)
+        await shoelaceChannel.send(content = '<@'+str(member.id)+'>',embed = brokenEmbed)
+
+@bot.command(name = 'activeKeys', aliases = ['viewActiveNewMemberKeys', 'aK', 'viewKeys'], help = 'DISPLAY NEW MATERIAL')
+@has_permissions(kick_members = True)
+async def viewKeys(ctx):
+    keyEmbed = discord.Embed(title = 'Active New Member Keys:', color = discord.Color.greyple())
+    for pair in newMemberKeys:
+        keyEmbed.add_field(name = bot.get_user(int(pair[0])).name, value = int(pair[1]), inline = False)
+    await ctx.send(embed = keyEmbed)
+
 @bot.event
 async def on_member_remove(member):
     welcomeChannel = member.guild.system_channel
@@ -336,7 +474,7 @@ async def on_member_remove(member):
     leaveEmbed = discord.Embed(title = 'Goodbye!', description = '<@'+str(member.id)+'> has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
     leaveEmbed.set_author(name = member.name, icon_url = member.avatar_url)
     await welcomeChannel.send(embed = leaveEmbed)
-    
+
 '''
 Reaction Roles
 lol no idea how this works
