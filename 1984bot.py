@@ -311,7 +311,6 @@ def parseContent(message):
         ' ': ' '
     }
 
-    string = string.lower
     for replaceFrom, replaceTo in replaceDict:
         string = re.sub(replaceFrom, replaceTo, string)
 
