@@ -52,7 +52,7 @@ for column in blacklistDF.columns[1:]:
 @bot.event
 async def on_ready():
     print('ONLINE')
-    
+
 '''
 DISCORD BOT
 - Word Highlight (Maybe find some way to fit into other blacklist too)
@@ -346,6 +346,8 @@ async def on_message(message):
 async def on_raw_message_edit(payload):
     shoelaceChannel = bot.get_channel(shoelaceID)
     message = await bot.get_channel(payload.channel_id).fetch_message(id = payload.message_id)
+    if message.author == bot.user or message.author.bot:
+        return
     content = parseContent(message)
     content = re.sub('[^\x20-\x7F]', '', content)
     if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
