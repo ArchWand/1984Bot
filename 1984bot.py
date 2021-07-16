@@ -37,7 +37,7 @@ else:
     blacklistDF = pd.DataFrame(index = (0, 1, 2), columns = ['ID', 'test'])
 
 
-newMemberKeys = []
+newMemberKeys = {}
 blacklistKeywords = []
 blacklistSuggestions = []
 
@@ -246,15 +246,15 @@ Word Highlight
 async def indoctrination(message):
     shoelaceChannel = bot.get_channel(shoelaceID)
     if not message.channel == shoelaceChannel: return
-    for pair in newMemberKeys:
-        if message.author.id == pair[0] and message.content == str(pair[1]):
+    for user, code in newMemberKeys.items():
+        if message.author.id == user and message.content == str(code):
             role = get(message.guild.roles, id = memberRoleID)
             if role is None: role = get(message.guild.roles, name = 'Member')
             await message.author.add_roles(role)
             welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
             welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
             await shoelaceChannel.send(embed = welcomeEmbed)
-            newMemberKeys.remove(pair)
+            newMemberKeys.pop(user)
             break
 
 async def randUptumblr(message):
@@ -422,7 +422,7 @@ async def on_member_join(member):
                 rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]) + ' To access the server, paste ' + str(randKey), inline = False)
         else:
             rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]), inline = False)
-    newMemberKeys.append((member.id, randKey))
+    newMemberKeys[member.id] = randKey
     try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
     except:
         shoelaceChannel = bot.get_channel(shoelaceID)
@@ -440,8 +440,8 @@ async def resend(ctx, member: discord.Member = None):
 @has_permissions(kick_members = True)
 async def viewKeys(ctx):
     keyEmbed = discord.Embed(title = 'Active New Member Keys:', description = ' ' if len(newMemberKeys) else 'None', color = discord.Color.greyple())
-    for pair in newMemberKeys:
-        keyEmbed.add_field(name = bot.get_user(int(pair[0])).name, value = int(pair[1]), inline = False)
+    for userID, code in newMemberKeys.items():
+        keyEmbed.add_field(name = bot.get_user(int(userID)).name, value = int(code), inline = False)
     await ctx.send(embed = keyEmbed)
 
 @bot.event
