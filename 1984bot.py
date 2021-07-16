@@ -243,6 +243,21 @@ Word Highlight
     send message in mod channel "message (copy) violates these keywords: [violationList]"
 '''
 
+async def indoctrination(message):
+    shoelaceChannel = bot.get_channel(shoelaceID)
+    if not message.channel == shoelaceChannel: return
+    for pair in newMemberKeys:
+        if message.author.id == pair[0]:
+            if message.content == str(pair[1]):
+                role = get(message.guild.roles, id = memberRoleID)
+                if role is None: role = get(message.guild.roles, name = 'Member')
+                await message.author.add_roles(role)
+                welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
+                welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
+                await shoelaceChannel.send(embed = welcomeEmbed)
+                newMemberKeys.remove(pair)
+                break
+
 async def randUptumblr(message):
     if message.channel.id in noUptumblr: return
     if random.random() < 0.01:
@@ -355,19 +370,8 @@ async def on_message(message):
     await bot.process_commands(message)
     if message.author == bot.user or message.author.bot:
         return
-    shoelaceChannel = bot.get_channel(shoelaceID)
-    if message.channel == shoelaceChannel:
-        for pair in newMemberKeys:
-            if message.author.id == pair[0]:
-                if message.content == str(pair[1]):
-                    role = get(message.guild.roles, id = memberRoleID)
-                    if role is None: role = get(message.guild.roles, name = 'Member')
-                    await message.author.add_roles(role)
-                    welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
-                    welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-                    await shoelaceChannel.send(embed = welcomeEmbed)
-                    newMemberKeys.remove(pair)
-                    break
+    await indoctrination(message)
+    await randUptumblr(message)
     await beppening(message)
     await logViolation(message)
 
