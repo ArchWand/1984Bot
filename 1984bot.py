@@ -233,9 +233,6 @@ async def subtractRule(ctx, index):
     rulesEmbed = rulesEmbedUpdate()
     await rulesUpdate(rulesEmbed)
     
-async def beppening(message):
-    content = parseContent(message)
-    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
 
 '''
 Word Highlight
@@ -244,6 +241,10 @@ Word Highlight
             violationList.append(keyword)
     send message in mod channel "message (copy) violates these keywords: [violationList]"
 '''
+
+async def beppening(message):	
+    content = parseContent(message)	
+    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))	
 
 def parseContent(message):
     string = message.content.lower()
@@ -314,30 +315,30 @@ def parseContent(message):
         ' ': ' ',
         '[^\x20-\x7F]': ''
     }
-    
+
     for replaceFrom, replaceTo in replaceDict.items():
         string = re.sub(replaceFrom, replaceTo, string)
     return string
 
-def getViolationsEmbed(message, fromEvent = 'sent'):
-    content = parseContent(message)
-    if message.channel.id in ignoredChannels: return
-    violationList = []
-    for word in blacklistKeywords:
-        if word.lower() in content.lower():
-            violationList.append(word)
-    if len(violationList) == 0: return
-    
-    violation = content[:128]
-    for word in violationList:
-        matches = re.findall(word, violation, flags=re.I)
-        for match in list(set(matches)):
-            violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)
-    if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'
-    alert = message.author.name + ' ' + fromEvent + ' [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
-    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
-    violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-    violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
+def getViolationsEmbed(message, fromEvent = 'sent'):	
+    content = parseContent(message)	
+    if message.channel.id in ignoredChannels: return	
+    violationList = []	
+    for word in blacklistKeywords:	
+        if word.lower() in content.lower():	
+            violationList.append(word)	
+    if len(violationList) == 0: return	
+
+    violation = content[:128]	
+    for word in violationList:	
+        matches = re.findall(word, violation, flags=re.I)	
+        for match in list(set(matches)):	
+            violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)	
+    if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'	
+    alert = message.author.name + ' ' + fromEvent + ' [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)	
+    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())	
+    violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)	
+    violationEmbed.add_field(name = '\u200b', value = alert, inline = True)	
     return violationEmbed
 
 @bot.event
@@ -358,9 +359,7 @@ async def on_message(message):
                     await shoelaceChannel.send(embed = welcomeEmbed)
                     newMemberKeys.remove(pair)
                     break
-    
     await beppening(message)
-    
     logChannel = bot.get_channel(logChannelID)
     try:
         await logChannel.send(embed = getViolationsEmbed(message))
@@ -373,9 +372,7 @@ async def on_raw_message_edit(payload):
     message = await bot.get_channel(payload.channel_id).fetch_message(id = payload.message_id)
     if message.author == bot.user or message.author.bot:
         return
-    
     await beppening(message)
-    
     logChannel = bot.get_channel(logChannelID)
     try:
         await logChannel.send(embed = getViolationsEmbed(message, 'edited'))
