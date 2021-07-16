@@ -439,7 +439,7 @@ async def resend(ctx, member: discord.Member = None):
 @bot.command(name = 'activeKeys', aliases = ['viewActiveNewMemberKeys', 'aK', 'viewKeys'] , help = 'DISPLAY NEW MATERIAL')
 @has_permissions(kick_members = True)
 async def viewKeys(ctx):
-    keyEmbed = discord.Embed(title = 'Active New Member Keys:', color = discord.Color.greyple())
+    keyEmbed = discord.Embed(title = 'Active New Member Keys:', description = ' ' if len(newMemberKeys) else 'None', color = discord.Color.greyple())
     for pair in newMemberKeys:
         keyEmbed.add_field(name = bot.get_user(int(pair[0])).name, value = int(pair[1]), inline = False)
     await ctx.send(embed = keyEmbed)
