@@ -53,7 +53,6 @@ for column in blacklistDF.columns[1:]:
 async def on_ready():
     print('ONLINE')
     
-
 '''
 DISCORD BOT
 - Word Highlight (Maybe find some way to fit into other blacklist too)
@@ -120,10 +119,7 @@ async def blacklistCreator(ctx):
     blacklistDF.index.name = 'index'
 
 def parseContent(message):
-    if message.author == client.user:
-       return
     string = message.content.lower
-    stringArr = ['place', 'triggers', 'here']
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
         '\u200B-\u200F\u2028-\u2029\uFEFF': '', # Zero-width characters
@@ -339,7 +335,8 @@ async def on_message(message):
                     await shoelaceChannel.send(embed = welcomeEmbed)
                     newMemberKeys.remove(pair)
                     break
-    content = re.sub('[^\x20-\x7F]', '', message.content)
+    content = parseContent(message)
+    content = re.sub('[^\x20-\x7F]', '', content)
     if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
     
     if message.channel.id not in ignoredChannels:
@@ -364,9 +361,9 @@ async def on_message(message):
 @bot.event
 async def on_raw_message_edit(payload):
     shoelaceChannel = bot.get_channel(shoelaceID)
-    content = payload.data['content']
-    content = re.sub('​', '', content)
     message = await bot.get_channel(payload.channel_id).fetch_message(id = payload.message_id)
+    content = parseContent(message)
+    content = re.sub('[^\x20-\x7F]', '', content)
     if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
     if message.channel.id not in ignoredChannels:
         violationList = []
