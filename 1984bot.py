@@ -52,7 +52,79 @@ for column in blacklistDF.columns[1:]:
 @bot.event
 async def on_ready():
     print('ONLINE')
+    
+async def on_message(self, message):
+    if message.author == client.user:
+       return
+     string = message.content
+     stringArr = ['place', 'triggers', 'here']
+     #All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
+     string = re.sub('1', 'i', string)
+     string = re.sub('3', 'e', string)
+     string = re.sub('4', 'a', string)
+     string = re.sub('5', 's', string)
+     string = re.sub('ñ', 'n', string)
+     string = re.sub('7', 't', string)
+     string = re.sub('0', 'o', string)
+     string = re.sub('8', 'b', string)
+     string = re.sub('&', 'and', string)
+     string = re.sub('z', 's', string)
+     string = re.sub('wanna', 'want to', string)
+     string = re.sub('your', '👇', string)
+     string = re.sub('ur', 'your', string)
+     string = re.sub('👇', 'your', string)
+     string = re.sub('-', ' ', string)
+     string = re.sub('–', ' ', string)
+     string = re.sub('—', ' ', string)
+     string = re.sub('_', ' ', string)
+     string = re.sub('🅰', 'a', string)
+     string = re.sub('🅱', 'b', string)
+     string = re.sub('🅾', 'o', string)
+     string = re.sub('🇦', 'a', string)
+     string = re.sub('🇧', 'b', string)
+     string = re.sub('🇨', 'c', string)
+     string = re.sub('🇩', 'd', string)
+     string = re.sub('🇪', 'e', string)
+     string = re.sub('🇫', 'f', string)
+     string = re.sub('🇬', 'g', string)
+     string = re.sub('🇭', 'h', string)
+     string = re.sub('🇮', 'i', string)
+     string = re.sub('🇯', 'j', string)
+     string = re.sub('🇰', 'k', string)
+     string = re.sub('🇱', 'l', string)
+     string = re.sub('🇲', 'm', string)
+     string = re.sub('🇳', 'n', string)
+     string = re.sub('🇴', 'o', string)
+     string = re.sub('🇵', 'p', string)
+     string = re.sub('🇶', 'q', string)
+     string = re.sub('🇷', 'r', string)
+     string = re.sub('🇸', 's', string)
+     string = re.sub('🇹', 't', string)
+     string = re.sub('🇺', 'u', string)
+     string = re.sub('🇻', 'v', string)
+     string = re.sub('🇼', 'w', string)
+     string = re.sub('🇽', 'x', string)
+     string = re.sub('🇾', 'y', string)
+     string = re.sub('🇿', 'z', string)
+     string = re.sub('✝', 't', string)
+     string = re.sub(' ', ' ', string)
+     string = re.sub(' ', ' ', string)
 
+        #Splits the message content into an array, tests if elements of the array are blacklisted words and then does stuff
+        commonElements = []
+        stringSplit = string.split()
+        for trigger in stringArr:
+            for Str in stringSplit:
+                if Str == trigger:
+                    commonElements.append(True)
+
+        commonElementsLength = len(commonElements)
+        
+        if commonElementsLength > 0: #If a blacklisted word was found, do stuff below here!
+            await message.delete()
+            embedVar = discord.Embed(title='Trigger Detected!', description='Please remember to spoiler messages from the blacklist!')
+            embedVar.add_field(name=f'Author: {message.author.name}#{message.author.discriminator}', value='||' + message.content + '||')
+            await message.channel.send(embed=embedVar)
 '''
 DISCORD BOT
 - Word Highlight (Maybe find some way to fit into other blacklist too)
