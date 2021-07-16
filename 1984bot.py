@@ -233,6 +233,9 @@ async def subtractRule(ctx, index):
     rulesEmbed = rulesEmbedUpdate()
     await rulesUpdate(rulesEmbed)
     
+async def beppening(message):
+    content = parseContent(message)
+    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
 
 '''
 Word Highlight
@@ -243,7 +246,7 @@ Word Highlight
 '''
 
 def parseContent(message):
-    string = message.content.lower
+    string = message.content.lower()
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
         '\u200B-\u200F\u2028-\u2029\uFEFF': '', # Zero-width characters
@@ -308,14 +311,34 @@ def parseContent(message):
         ':ophiuchus:': 'u',
         ':aries:': 'v',
         ' ': ' ',
-        ' ': ' '
+        ' ': ' ',
+        '[^\x20-\x7F]': ''
     }
-
-    string = string.lower
-    for replaceFrom, replaceTo in replaceDict:
+    
+    for replaceFrom, replaceTo in replaceDict.items():
         string = re.sub(replaceFrom, replaceTo, string)
-
     return string
+
+def getViolationsEmbed(message, fromEvent = 'sent'):
+    content = parseContent(message)
+    if message.channel.id in ignoredChannels: return
+    violationList = []
+    for word in blacklistKeywords:
+        if word.lower() in content.lower():
+            violationList.append(word)
+    if len(violationList) == 0: return
+    
+    violation = content[:128]
+    for word in violationList:
+        matches = re.findall(word, violation, flags=re.I)
+        for match in list(set(matches)):
+            violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)
+    if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'
+    alert = message.author.name + ' ' + fromEvent + ' [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
+    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
+    violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
+    violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
+    return violationEmbed
 
 @bot.event
 async def on_message(message):
@@ -335,28 +358,14 @@ async def on_message(message):
                     await shoelaceChannel.send(embed = welcomeEmbed)
                     newMemberKeys.remove(pair)
                     break
-    content = parseContent(message)
-    content = re.sub('[^\x20-\x7F]', '', content)
-    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
     
-    if message.channel.id not in ignoredChannels:
-        violationList = []
-        logChannel = bot.get_channel(logChannelID)
-        for word in blacklistKeywords:
-            if word.lower() in content.lower():
-                violationList.append(word)
-        if len(violationList) > 0:
-            violation = content[:128]
-            for word in violationList:
-                matches = re.findall(word, violation, flags=re.I)
-                for match in list(set(matches)):
-                    violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)
-            if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'
-            alert = message.author.name + ' sent [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
-            violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
-            violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-            violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
-            await logChannel.send(embed = violationEmbed)
+    await beppening(message)
+    
+    logChannel = bot.get_channel(logChannelID)
+    try:
+        await logChannel.send(embed = getViolationsEmbed(message))
+    except Exception:
+        pass
 
 @bot.event
 async def on_raw_message_edit(payload):
@@ -364,27 +373,14 @@ async def on_raw_message_edit(payload):
     message = await bot.get_channel(payload.channel_id).fetch_message(id = payload.message_id)
     if message.author == bot.user or message.author.bot:
         return
-    content = parseContent(message)
-    content = re.sub('[^\x20-\x7F]', '', content)
-    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
-    if message.channel.id not in ignoredChannels:
-        violationList = []
-        logChannel = bot.get_channel(logChannelID)
-        for word in blacklistKeywords:
-            if word.lower() in content.lower():
-                violationList.append(word)
-        if len(violationList) > 0:
-            violation = content[:128]
-            for word in violationList:
-                matches = re.findall(word, violation, flags=re.I)
-                for match in list(set(matches)):
-                    violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)
-            if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'
-            alert = message.author.name + ' edited [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
-            editViolationEmbed = discord.Embed(title = '**Edit Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
-            editViolationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-            editViolationEmbed.add_field(name = '\u200b', value = alert, inline = True)
-            await logChannel.send(embed = editViolationEmbed)
+    
+    await beppening(message)
+    
+    logChannel = bot.get_channel(logChannelID)
+    try:
+        await logChannel.send(embed = getViolationsEmbed(message, 'edited'))
+    except Exception:
+        pass
     
 '''
 Cone/Ice
