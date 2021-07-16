@@ -429,29 +429,10 @@ async def on_member_join(member):
         await shoelaceChannel.send(content = '<@'+str(member.id)+'>',embed = embed)
 
 @bot.command(name = 'resend', aliases = ['rS', 'resendWelcome'], help = 'REPEAT DECONTAMINATION PROCEDURES')
-async def resend(ctx, ID = None):
-    if ID == None:
+async def resend(ctx, member: discord.Member = None):
+    if member == None:
         member = ctx.author
-    else: member = bot.get_user(int(ID))
-    rulesEmbed = discord.Embed(title = 'Rules List', url = 'https://docs.google.com/document/d/1vqxfYxO2mtPh0O7rrgOTUx0UtW3a6vDyXjYclI2n5X8/edit?usp=sharing', color = discord.Color.dark_theme())
-    columns = sorted(rulesDF.columns[1:], key = int)
-    rand_index = random.randint(0, len(columns)-1)
-    randKey = random.randint(1000000, 9999999)
-    for index in range(len(columns)):
-        if rand_index == index:
-            if str(rulesDF.at[1, columns[index]]) == '-----':
-                rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = 'To access the server, paste ' + str(randKey), inline = False)
-            else:
-                rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]) + ' To access the server, paste ' + str(randKey), inline = False)
-        else:
-            rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]), inline = False)
-    newMemberKeys.append([member.id, randKey])
-    try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
-    except:
-        shoelaceChannel = bot.get_channel(shoelaceID)
-        brokenEmbed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
-        brokenEmbed.set_author(name = member.name, icon_url = member.avatar_url)
-        await shoelaceChannel.send(content = '<@'+str(member.id)+'>',embed = brokenEmbed)
+    await on_member_join(member)
 
 @bot.command(name = 'activeKeys', aliases = ['viewActiveNewMemberKeys', 'aK', 'viewKeys'], help = 'DISPLAY NEW MATERIAL')
 @has_permissions(kick_members = True)
