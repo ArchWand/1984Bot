@@ -262,6 +262,7 @@ def parseContent(message):
         '&': 'and',
         'wanna': 'want to',
         '(?<!yo)ur': 'your',
+        '\u1F447': 'your',
         '-': ' ',
         '–': ' ',
         '—': ' ',
