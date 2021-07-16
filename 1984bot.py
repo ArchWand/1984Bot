@@ -53,83 +53,6 @@ for column in blacklistDF.columns[1:]:
 async def on_ready():
     print('ONLINE')
     
-async def on_message(self, message):
-    if message.author == client.user:
-       return
-    string = message.content.lower
-    stringArr = ['place', 'triggers', 'here']
-    #All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
-    replaceDict = {
-        '1': 'i',
-        '3': 'e',
-        '4': 'a',
-        '5': 's',
-        'ñ': 'n',
-        '7': 't',
-        '0': 'o',
-        '8': 'b',
-        '&': 'and',
-        'z': 's',
-        'wanna': 'want to',
-        'your': '👇',
-        'ur': 'your',
-        '👇': 'your',
-        '-': ' ',
-        '–': ' ',
-        '—': ' ',
-        '_': ' ',
-        '🅰': 'a',
-        '🅱': 'b',
-        '🅾': 'o',
-        '🇦': 'a',
-        '🇧': 'b',
-        '🇨': 'c',
-        '🇩': 'd',
-        '🇪': 'e',
-        '🇫': 'f',
-        '🇬': 'g',
-        '🇭': 'h',
-        '🇮': 'i',
-        '🇯': 'j',
-        '🇰': 'k',
-        '🇱': 'l',
-        '🇲': 'm',
-        '🇳': 'n',
-        '🇴': 'o',
-        '🇵': 'p',
-        '🇶': 'q',
-        '🇷': 'r',
-        '🇸': 's',
-        '🇹': 't',
-        '🇺': 'u',
-        '🇻': 'v',
-        '🇼': 'w',
-        '🇽': 'x',
-        '🇾': 'y',
-        '🇿': 'z',
-        '✝': 't',
-        ' ': ' ',
-        ' ': ' '
-    }
-    
-    for replaceFrom, replaceTo in replaceDict:
-        string = re.sub(replaceFrom, replaceTo, string)
-
-    #Splits the message content into an array, tests if elements of the array are blacklisted words and then does stuff
-    commonElements = []
-    stringSplit = string.split()
-    for trigger in stringArr:
-        for Str in stringSplit:
-            if Str == trigger:
-                commonElements.append(True)
-
-    commonElementsLength = len(commonElements)
-    
-    if commonElementsLength > 0: #If a blacklisted word was found, do stuff below here!
-        await message.delete()
-        embedVar = discord.Embed(title='Trigger Detected!', description='Please remember to spoiler messages from the blacklist!')
-        embedVar.add_field(name=f'Author: {message.author.name}#{message.author.discriminator}', value='||' + message.content + '||')
-        await message.channel.send(embed=embedVar)
 
 '''
 DISCORD BOT
@@ -195,6 +118,68 @@ async def blacklistCreator(ctx):
     blacklistDF.at[2, 'ID'] = atMsg.id
     blacklistDF.rename(columns = {'ID': str(ctx.channel.id)}, inplace = True)
     blacklistDF.index.name = 'index'
+
+def parseContent(message):
+    if message.author == client.user:
+       return
+    string = message.content.lower
+    stringArr = ['place', 'triggers', 'here']
+    # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
+    replaceDict = {
+        '\u200B-\u200F\u2028-\u2029\uFEFF': '', # Zero-width characters
+        '1': 'i',
+        '3': 'e',
+        '4': 'a',
+        '5': 's',
+        'ñ': 'n',
+        '7': 't',
+        '0': 'o',
+        '8': 'b',
+        '&': 'and',
+        'wanna': 'want to',
+        '(?<!yo)ur': 'your',
+        '-': ' ',
+        '–': ' ',
+        '—': ' ',
+        '_': ' ',
+        '🅰': 'a',
+        '🅱': 'b',
+        '🅾': 'o',
+        '🇦': 'a',
+        '🇧': 'b',
+        '🇨': 'c',
+        '🇩': 'd',
+        '🇪': 'e',
+        '🇫': 'f',
+        '🇬': 'g',
+        '🇭': 'h',
+        '🇮': 'i',
+        '🇯': 'j',
+        '🇰': 'k',
+        '🇱': 'l',
+        '🇲': 'm',
+        '🇳': 'n',
+        '🇴': 'o',
+        '🇵': 'p',
+        '🇶': 'q',
+        '🇷': 'r',
+        '🇸': 's',
+        '🇹': 't',
+        '🇺': 'u',
+        '🇻': 'v',
+        '🇼': 'w',
+        '🇽': 'x',
+        '🇾': 'y',
+        '🇿': 'z',
+        '✝': 't',
+        ' ': ' ',
+        ' ': ' '
+    }
+    
+    for replaceFrom, replaceTo in replaceDict:
+        string = re.sub(replaceFrom, replaceTo, string)
+    
+    return string
 
 @bot.command(name = 'aggregate:', aliases = ['addBL', 'aB', 'addBlacklist'], help = 'ADD SAFETY PARAMETERS')
 @has_permissions(kick_members = True)
