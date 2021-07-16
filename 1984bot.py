@@ -233,9 +233,6 @@ async def subtractRule(ctx, index):
     rulesEmbed = rulesEmbedUpdate()
     await rulesUpdate(rulesEmbed)
     
-async def beppening(message):
-    content = parseContent(message)
-    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
 
 '''
 Word Highlight
@@ -244,6 +241,10 @@ Word Highlight
             violationList.append(keyword)
     send message in mod channel "message (copy) violates these keywords: [violationList]"
 '''
+
+async def beppening(message):	
+    content = parseContent(message)	
+    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))	
 
 def parseContent(message):
     string = message.content.lower()
@@ -265,9 +266,9 @@ def parseContent(message):
         '–': ' ',
         '—': ' ',
         '_': ' ',
-        ':a:': 'a',
-        ':b:': 'b',
-        ':o2:': 'o',
+        '\U0001f170': 'a',
+        '\U0001f171': 'b',
+        '\U0001f17e': 'o',
         '\U0001f1e6': 'a',
         '\U0001f1e7': 'b',
         '\U0001f1e8': 'c',
@@ -288,56 +289,56 @@ def parseContent(message):
         '\U0001f1f7': 'r',
         '\U0001f1f8': 's',
         '\U0001f1f9': 't',
-        ':regional_indicator_u:': 'u',
-        ':regional_indicator_v:': 'v',
-        ':regional_indicator_w:': 'w',
-        ':regional_indicator_x:': 'x',
-        ':regional_indicator_y:': 'y',
-        ':regional_indicator_z:': 'z',
-        '\u262A': 'c',
+        '\U0001f1fa': 'u',
+        '\U0001f1fb': 'v',
+        '\U0001f1fc': 'w',
+        '\U0001f1fd': 'x',
+        '\U0001f1fe': 'y',
+        '\U0001f1ff': 'z',
+        '\u262a': 'c',
         '3\uFE0F\u20E3': 'e',
         '\u2653': 'h',
         '\u2139': 'i',
         '1\uFE0F\u20E3': 'l',
-        '\u264D': 'm',
-        '\u264F': 'm',
+        '\u264d': 'm',
+        '\u264f': 'm',
         '\u2651': 'n',
-        '\u2B55': 'o',
+        '\u2b55': 'o',
         '0\uFE0F\u20E3': 'o',
-        '\u1F17F': 'p',
+        '\U0001f17f': 'p',
         '5\uFE0F\u20E3': 's',
-        '\u271D': 't',
+        '\u271d': 't',
         '\u2626': 't',
-        '\u26CE': 'u',
+        '\u26ce': 'u',
         '\u2648': 'v',
         ' ': ' ',
         ' ': ' ',
         '[^\x20-\x7F]': ''
     }
-    
+
     for replaceFrom, replaceTo in replaceDict.items():
         string = re.sub(replaceFrom, replaceTo, string)
     return string
 
-def getViolationsEmbed(message, fromEvent = 'sent'):
-    content = parseContent(message)
-    if message.channel.id in ignoredChannels: return
-    violationList = []
-    for word in blacklistKeywords:
-        if word.lower() in content.lower():
-            violationList.append(word)
-    if len(violationList) == 0: return
-    
-    violation = content[:128]
-    for word in violationList:
-        matches = re.findall(word, violation, flags=re.I)
-        for match in list(set(matches)):
-            violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)
-    if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'
-    alert = message.author.name + ' ' + fromEvent + ' [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)
-    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
-    violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-    violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
+def getViolationsEmbed(message, fromEvent = 'sent'):	
+    content = parseContent(message)	
+    if message.channel.id in ignoredChannels: return	
+    violationList = []	
+    for word in blacklistKeywords:	
+        if word.lower() in content.lower():	
+            violationList.append(word)	
+    if len(violationList) == 0: return	
+
+    violation = content[:128]	
+    for word in violationList:	
+        matches = re.findall(word, violation, flags=re.I)	
+        for match in list(set(matches)):	
+            violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)	
+    if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'	
+    alert = message.author.name + ' ' + fromEvent + ' [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)	
+    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())	
+    violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)	
+    violationEmbed.add_field(name = '\u200b', value = alert, inline = True)	
     return violationEmbed
 
 @bot.event
@@ -358,9 +359,7 @@ async def on_message(message):
                     await shoelaceChannel.send(embed = welcomeEmbed)
                     newMemberKeys.remove(pair)
                     break
-    
     await beppening(message)
-    
     logChannel = bot.get_channel(logChannelID)
     try:
         await logChannel.send(embed = getViolationsEmbed(message))
@@ -373,9 +372,7 @@ async def on_raw_message_edit(payload):
     message = await bot.get_channel(payload.channel_id).fetch_message(id = payload.message_id)
     if message.author == bot.user or message.author.bot:
         return
-    
     await beppening(message)
-    
     logChannel = bot.get_channel(logChannelID)
     try:
         await logChannel.send(embed = getViolationsEmbed(message, 'edited'))
