@@ -373,7 +373,6 @@ async def on_message(message):
 
 @bot.event
 async def on_raw_message_edit(payload):
-    shoelaceChannel = bot.get_channel(shoelaceID)
     message = await bot.get_channel(payload.channel_id).fetch_message(id = payload.message_id)
     if message.author == bot.user or message.author.bot:
         return
