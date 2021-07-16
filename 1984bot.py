@@ -434,7 +434,7 @@ async def resend(ctx, member: discord.Member = None):
         member = ctx.author
     await on_member_join(member)
 
-@bot.command(name = 'activeKeys', aliases = ['viewActiveNewMemberKeys', 'aK'] , help = 'DISPLAY NEW MATERIAL')s
+@bot.command(name = 'activeKeys', aliases = ['viewActiveNewMemberKeys', 'aK'] , help = 'DISPLAY NEW MATERIAL')
 @has_permissions(kick_members = True)
 async def viewKeys(ctx):
     keyEmbed = discord.Embed(title = 'Active New Member Keys:', color = discord.Color.greyple())
