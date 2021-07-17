@@ -47,10 +47,12 @@ for column in blacklistDF.columns[1:]:
 @bot.event
 async def on_ready():
     print('ONLINE')
-    global logChannel, shoelaceChannel, memberRoleID, ignoredChannels, noUptumblr
+    global ctds, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
+    ctds = bot.get_guild(808811670327263312)
+    
     logChannel = bot.get_channel(829010774231744513)
     shoelaceChannel = bot.get_channel(843198731565662250)
-    memberRoleID = 835601075541245952
+    memberRole = ctds.get_role(835601075541245952)
     ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
     noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
     print('VARS DECLARED')
@@ -248,9 +250,7 @@ async def indoctrination(message):
     if not message.channel == shoelaceChannel: return
     for user, code in newMemberKeys.items():
         if message.author.id == user and message.content == str(code):
-            role = get(message.guild.roles, id = memberRoleID)
-            if role is None: role = get(message.guild.roles, name = 'Member')
-            await message.author.add_roles(role)
+            await message.author.add_roles(memberRole)
             welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
             welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
             await shoelaceChannel.send(embed = welcomeEmbed)
