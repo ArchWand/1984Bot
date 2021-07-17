@@ -19,12 +19,6 @@ token = os.getenv('discordToken')
 
 bot = commands.Bot(command_prefix = ['1984bot, ', '$'], intents = intents)
 
-logChannelID = 829010774231744513
-shoelaceID = 843198731565662250
-memberRoleID = 835601075541245952
-ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
-noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
-
 if os.path.exists('rules.csv') == True:
     rulesDF = pd.read_csv('rules.csv', sep = ';')
     rulesDF.set_index('index', inplace = True)
@@ -53,6 +47,14 @@ for column in blacklistDF.columns[1:]:
 @bot.event
 async def on_ready():
     print('ONLINE')
+    global logChannel, shoelaceChannel, memberRoleID, ignoredChannels, noUptumblr
+    logChannel = bot.get_channel(829010774231744513)
+    shoelaceChannel = bot.get_channel(843198731565662250)
+    memberRoleID = 835601075541245952
+    ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
+    noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
+    print('VARS DECLARED')
+
 
 '''
 DISCORD BOT
@@ -165,7 +167,6 @@ async def suggestBL(ctx, field, subject, *descrips):
     sep = ' '
     blSuggestEmbed.add_field(name = subject, value = sep.join(descrips), inline = False)
     blSuggestEmbed.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-    logChannel = bot.get_channel(logChannelID)
     message = await logChannel.send(embed = blSuggestEmbed)
     await message.edit(content = str(message.id), embed = blSuggestEmbed)
     blacklistSuggestions.append([message.id, subject, sep.join(descrips), field])
@@ -244,7 +245,6 @@ Word Highlight
 '''
 
 async def indoctrination(message):
-    shoelaceChannel = bot.get_channel(shoelaceID)
     if not message.channel == shoelaceChannel: return
     for user, code in newMemberKeys.items():
         if message.author.id == user and message.content == str(code):
@@ -342,7 +342,6 @@ def parseContent(message):
     return string
 
 async def logViolation(message, fromEvent = 'sent'):
-    logChannel = bot.get_channel(logChannelID)
     content = parseContent(message)
     if message.channel.id in ignoredChannels: return
     violationList = []
@@ -425,7 +424,6 @@ async def on_member_join(member):
     newMemberKeys[member.id] = randKey
     try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
     except:
-        shoelaceChannel = bot.get_channel(shoelaceID)
         embed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
         embed.set_author(name = member.name, icon_url = member.avatar_url)
         await shoelaceChannel.send(content = '<@'+str(member.id)+'>',embed = embed)
