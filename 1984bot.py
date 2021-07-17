@@ -47,10 +47,11 @@ for column in blacklistDF.columns[1:]:
 @bot.event
 async def on_ready():
     print('ONLINE')
-    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
+    global ctds, nick, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
     ctds = bot.get_guild(808811670327263312)
+    nick = os.path.splitext(sys.argv[0])[0]
     
-    welcomeChannel = member.guild.system_channel
+    welcomeChannel = ctds.system_channel
     if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
     logChannel = bot.get_channel(829010774231744513)
     shoelaceChannel = bot.get_channel(843198731565662250)
@@ -358,7 +359,7 @@ async def logViolation(message, fromEvent = 'sent'):
         for match in list(set(matches)):
             violation = re.sub(match, f'[{match}]({message.jump_url})', violation)
     if len(content) > 128: violation += f'...\n[See more ...]({message.jump_url})'
-    alert = f'{message.author.name} {fromEvent} [{a message}]({message.jump_url}) containing: ' + ', '.join(violationList)
+    alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(violationList)
     violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
     violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
@@ -457,8 +458,9 @@ lol no idea how this works
 
 @bot.event
 async def on_member_update(before, member):
-    if member.guild.me.nick != sys.argv[0]:
-        await member.guild.me.edit(nick = os.path.splitext(sys.argv[0])[0])
+    if member == bot.user:
+        if member.guild.me.nick != nick:
+            await member.guild.me.edit(nick = nick)
 
 @bot.command(name = 'nick', aliases = ['nickname', 'nN', 'changenick', 'chnick'], help = 'REINDEX SUBJECT')
 async def chnick(ctx, member: discord.Member = bot.user, *nickname):
