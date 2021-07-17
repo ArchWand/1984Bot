@@ -22,7 +22,7 @@ bot = commands.Bot(command_prefix = ['1984bot, ', '$'], intents = intents)
 logChannelID = 829010774231744513
 shoelaceID = 843198731565662250
 memberRoleID = 835601075541245952
-ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210]
+ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
 noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
 
 if os.path.exists('rules.csv') == True:
@@ -457,13 +457,23 @@ Reaction Roles
 lol no idea how this works
 '''
 
-@bot.command(name='ping', help = 'MONITOR CONNECTION')
+@bot.event
+async def on_member_update(before, member):
+    if member.guild.me.nick != sys.argv[0]:
+        await member.guild.me.edit(nick = os.path.splitext(sys.argv[0])[0])
+
+@bot.command(name = 'nick', help = 'NAMES ARE BUT A FARCE')
+async def chnick(ctx, member: discord.Member = bot.user, *nickname):
+    nick = ' '.join(nickname)
+    await member.edit(nick = nick)
+
+@bot.command(name = 'ping', help = 'MONITOR CONNECTION')
 async def ping(ctx):
     await ctx.send('Ping is ' + str(np.round(1000*bot.latency, 2)) + 'ms')
 
 @bot.command(name = 'reload', aliases = ['f5', 'refresh'], help = 'RELOAD')
 async def reload(ctx):
-    print('RELOADING')
+    print('\nRELOADING ..........................\n')
     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
 @bot.command(name = 'disconnect', aliases = ['dc', 'logoff'], help = 'DEACTIVATE')
