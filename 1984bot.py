@@ -259,12 +259,12 @@ async def indoctrination(message):
 
 async def randUptumblr(message):
     if message.channel.id in noUptumblr: return
-    if random.random() < 0.01:
+    if random.random() < 0.0001:
         await message.add_reaction("<:uptumblr:810019271215677441>")
 
-async def beppening(message):	
-    content = parseContent(message)	
-    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))	
+async def beppening(message):
+    content = parseContent(message)
+    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
 
 def parseContent(message):
     string = message.content.lower()
@@ -281,8 +281,8 @@ def parseContent(message):
         '8': 'b',
         '&': 'and',
         'wanna': 'want to',
-        '(?<!yo)ur': 'your',
-        '\u1F447': 'your',
+        r'\bur\b': 'your',
+        '\U0001F447': 'your',
         '-': ' ',
         '–': ' ',
         '—': ' ',
@@ -422,7 +422,7 @@ async def on_member_join(member):
         else:
             rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]), inline = False)
     newMemberKeys[member.id] = randKey
-    try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
+    try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste the 7 digit key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
     except:
         embed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
         embed.set_author(name = member.name, icon_url = member.avatar_url)
@@ -460,7 +460,7 @@ async def on_member_update(before, member):
     if member.guild.me.nick != sys.argv[0]:
         await member.guild.me.edit(nick = os.path.splitext(sys.argv[0])[0])
 
-@bot.command(name = 'nick', help = 'NAMES ARE BUT A FARCE')
+@bot.command(name = 'nick', aliases = ['nickname', 'nN'], help = 'REINDEX SUBJECT')
 async def chnick(ctx, member: discord.Member = bot.user, *nickname):
     nick = ' '.join(nickname)
     await member.edit(nick = nick)
