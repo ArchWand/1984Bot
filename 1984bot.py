@@ -464,8 +464,10 @@ async def on_member_update(before, member):
 
 @bot.command(name = 'nick', aliases = ['nickname', 'nN', 'changenick', 'chnick'], help = 'REINDEX SUBJECT')
 async def chnick(ctx, member: discord.Member = bot.user, *nickname):
-    nick = ' '.join(nickname)
-    await member.edit(nick = nick)
+    global nick
+    newNick = ' '.join(nickname)
+    if member == bot.user: nick = newNick
+    await member.edit(nick = newNick)
 
 @bot.command(name = 'ping', help = 'MONITOR CONNECTION')
 async def ping(ctx):
