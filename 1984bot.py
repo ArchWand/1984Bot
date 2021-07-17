@@ -251,7 +251,7 @@ async def indoctrination(message):
     for user, code in newMemberKeys.items():
         if message.author.id == user and message.content == str(code):
             await message.author.add_roles(memberRole)
-            welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
+            welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, ' + message.author.mention + '!', color = discord.Color.dark_gold())
             welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
             await shoelaceChannel.send(embed = welcomeEmbed)
             newMemberKeys.pop(user)
@@ -426,7 +426,7 @@ async def on_member_join(member):
     except:
         embed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
         embed.set_author(name = member.name, icon_url = member.avatar_url)
-        await shoelaceChannel.send(content = '<@'+str(member.id)+'>',embed = embed)
+        await shoelaceChannel.send(content = member.mention,embed = embed)
 
 @bot.command(name = 'resend', aliases = ['rS', 'resendWelcome'], help = 'REPEAT DECONTAMINATION PROCEDURES')
 async def resend(ctx, member: discord.Member = None):
@@ -446,7 +446,7 @@ async def viewKeys(ctx):
 async def on_member_remove(member):
     welcomeChannel = member.guild.system_channel
     if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
-    leaveEmbed = discord.Embed(title = 'Goodbye!', description = '<@'+str(member.id)+'> has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
+    leaveEmbed = discord.Embed(title = 'Goodbye!', description = member.mention + ' has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
     leaveEmbed.set_author(name = member.name, icon_url = member.avatar_url)
     await welcomeChannel.send(embed = leaveEmbed)
 
