@@ -346,8 +346,7 @@ async def logViolation(message, fromEvent = 'sent'):
     if message.channel.id in ignoredChannels: return
     violationList = []
     for pattern in blacklistKeywords:
-        if re.match(pattern, content):
-            violationList.append(pattern)
+        violationList.extend(re.findall(pattern, content))
     if len(violationList) == 0: return
     
     
