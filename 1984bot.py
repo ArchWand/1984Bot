@@ -32,7 +32,8 @@ else:
 
 
 newMemberKeys = {}
-blacklistKeywords = []
+violationWords = []
+violationPatterns = []
 blacklistSuggestions = []
 
 for column in blacklistDF.columns[1:]:
@@ -344,9 +345,13 @@ def parseContent(message):
 async def logViolation(message, fromEvent = 'sent'):
     content = parseContent(message)
     if message.channel.id in ignoredChannels: return
+    
     violationList = []
+    containedWords = []
+    
     for pattern in blacklistKeywords:
-        violationList.extend(re.findall(pattern, content))
+        violationList.append(re.search(pattern, content).group(1))
+        containedWords.extend(re.findall(pattern, content))
     if len(violationList) == 0: return
     
     
