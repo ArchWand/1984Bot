@@ -332,6 +332,7 @@ def parseContent(message):
         '\u2648': 'v',
         ' ': ' ',
         ' ': ' ',
+        r'\n': ' ',
         '[^\x20-\x7F]': ''
     }
 
