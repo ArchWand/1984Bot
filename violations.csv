@@ -1,0 +1,4 @@
+Violation,Priority,Match Pattern
+piss,0,\b\S*?piss.*?\b
+trap,1,\b\S*?trap.*?\b
+sex,1,\bsex\b
