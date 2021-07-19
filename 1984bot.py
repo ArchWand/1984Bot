@@ -17,7 +17,7 @@ intents.members = True
 load_dotenv()
 token = os.getenv('discordToken')
 
-bot = commands.Bot(command_prefix = ['1984bot, ', '$'], intents = intents)
+bot = commands.Bot(command_prefix = ['1984bot, ', '$', '\`'], intents = intents)
 
 if os.path.exists('rules.csv') == True:
     rulesDF = pd.read_csv('rules.csv', sep = ';')
@@ -345,10 +345,11 @@ async def logViolation(message, fromEvent = 'sent'):
     content = parseContent(message)
     if message.channel.id in ignoredChannels: return
     violationList = []
-    for word in blacklistKeywords:
-        if word.lower() in content.lower():
-            violationList.append(word)
+    for pattern in blacklistKeywords:
+        if re.match(pattern, content):
+            violationList.append(pattern)
     if len(violationList) == 0: return
+    
     
     violation = content[:128]
     for word in violationList:
