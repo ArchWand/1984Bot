@@ -357,7 +357,9 @@ async def logViolation(message, fromEvent = 'sent'):
     ping = ' ' # decide priority here
     
     # This is where the double loops will be going
-    # Double loops are replacing the following bit
+    
+    
+    
     content = content[:256] if len(content) <= 256 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
     for word in containedWords:
         content = re.sub(word, f'[**{word}**]({message.jump_url})', content)
@@ -472,9 +474,8 @@ lol no idea how this works
 
 @bot.event
 async def on_member_update(before, member):
-    if member == bot.user:
-        if member.guild.me.nick != nick:
-            await member.guild.me.edit(nick = nick)
+    if member.guild.me.nick != nick:
+        await member.guild.me.edit(nick = nick)
 
 @bot.command(name = 'nick', aliases = ['nickname', 'nN', 'changenick', 'chnick'], help = 'REINDEX SUBJECT')
 async def chnick(ctx, member: discord.Member = bot.user, *nickname):
