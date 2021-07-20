@@ -34,7 +34,7 @@ if os.path.exists(blacklistFilePath) == True:
 else:
     blacklistDF = pd.DataFrame(index = range(3), columns = ['ID', 'test'])
 if os.path.exists(violationsFilePath):
-    violationsDF = pd.read_csv(violationsFilePath)
+    violationDF = pd.read_csv(violationsFilePath)
 else:
     violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Priority', 'Pattern'))
 
@@ -332,6 +332,7 @@ def parseContent(message):
         ' ': ' ',
         r'\n': ' ',
         '[^\x20-\x7F]': ''
+        r'(https?)(:\/\/.*?\/)': '\\1\u200B\\2'
     }
 
     for replaceFrom, replaceTo in replaceDict.items():
@@ -340,6 +341,7 @@ def parseContent(message):
 
 async def logViolation(message, fromEvent = 'sent'):
     if message.channel.id in ignoredChannels: return
+    channel = logChannel
     content = parseContent(message)
     
     violationList = []
@@ -352,13 +354,13 @@ async def logViolation(message, fromEvent = 'sent'):
             violationList.append(word)
     if len(violationList) == 0: return
     
+    ping = ' ' # decide priority here
+    
     # This is where the double loops will be going
     # Double loops are replacing the following bit
-    content = content[:128] if len(content) <= 128 else f'{content[:128]}...\n[__See more ...__]({message.jump_url})'
+    content = content[:128] if len(content) <= 128 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
     for word in containedWords:
         content = re.sub(word, f'[**{word}**]({message.jump_url})', content)
-    
-    # add something to break hyperlinks here
     
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
     
@@ -366,9 +368,7 @@ async def logViolation(message, fromEvent = 'sent'):
     embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     embed.add_field(name = '\u200b', value = alert, inline = True)
     
-    ping = ' ' # decide priority here
-    
-    await logChannel.send(content = ping, embed = embed)
+    await channel.send(content = ping, embed = embed)
 
 @bot.event
 async def on_message(message):
