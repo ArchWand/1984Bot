@@ -331,7 +331,7 @@ def parseContent(message):
         ' ': ' ',
         ' ': ' ',
         r'\n': ' ',
-        '[^\x20-\x7F]': ''
+        '[^\x20-\x7F]': '',
         r'(https?)(:\/\/.*?\/)': '\\1\u200B\\2'
     }
 
@@ -368,7 +368,14 @@ async def logViolation(message, fromEvent = 'sent'):
     embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     embed.add_field(name = '\u200b', value = alert, inline = True)
     
-    await channel.send(content = ping, embed = embed)
+    if len(message.attachments) <= 1 and message.attachments[0].size < 8388608:
+        attachments = await message.attachments[0].to_file()
+        attachmentLinks = [' ']
+    else:
+        attachments = None
+        attachmentLinks = [file.url for file in message.attachments]
+    
+    await channel.send(content = ping + ' what\n'.join(attachmentLinks), file = attachments, embed = embed)
 
 @bot.event
 async def on_message(message):
