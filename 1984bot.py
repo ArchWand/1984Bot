@@ -358,24 +358,27 @@ async def logViolation(message, fromEvent = 'sent'):
     
     # This is where the double loops will be going
     # Double loops are replacing the following bit
-    content = content[:128] if len(content) <= 128 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
+    content = content[:256] if len(content) <= 256 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
     for word in containedWords:
         content = re.sub(word, f'[**{word}**]({message.jump_url})', content)
     
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
     
-    embed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = content, color = discord.Color.dark_gold())
+    embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), description = content, color = discord.Color.dark_gold())
     embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     embed.add_field(name = '\u200b', value = alert, inline = True)
     
-    if len(message.attachments) <= 1 and message.attachments[0].size < 8388608:
+    if len(message.attachments) == 0:
+        attachments = None
+        attachmentLinks = [' ']
+    elif len(message.attachments) == 1 and message.attachments[0].size < 8388608:
         attachments = await message.attachments[0].to_file()
         attachmentLinks = [' ']
     else:
         attachments = None
         attachmentLinks = [file.url for file in message.attachments]
     
-    await channel.send(content = ping + ' what\n'.join(attachmentLinks), file = attachments, embed = embed)
+    await channel.send(content = ping + '\n'.join(attachmentLinks), file = attachments, embed = embed)
 
 @bot.event
 async def on_message(message):
