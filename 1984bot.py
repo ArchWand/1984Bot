@@ -476,8 +476,9 @@ lol no idea how this works
 
 @bot.event
 async def on_member_update(before, member):
-    if member.guild.me.nick != nick:
-        await member.guild.me.edit(nick = nick)
+    if member == bot.user
+        if member.guild.me.nick != nick:
+            await member.guild.me.edit(nick = nick)
 
 @bot.command(name = 'nick', aliases = ['nickname', 'nN', 'changenick', 'chnick'], help = 'REINDEX SUBJECT')
 async def chnick(ctx, member: discord.Member = bot.user, *nickname):
