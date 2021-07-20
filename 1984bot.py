@@ -354,13 +354,14 @@ async def logViolation(message, fromEvent = 'sent'):
     if len(violationList) == 0: return
     
     violation = content[:128]
+    violationOriginal = message.content
     for word in violationList:
         matches = re.findall(word, violation, flags=re.I)
         for match in list(set(matches)):
             violation = re.sub(match, f'[{match}]({message.jump_url})', violation)
     if len(content) > 128: violation += f'...\n[See more ...]({message.jump_url})'
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(violationList)
-    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
+    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = 'Original Content: ' + violationOriginal + '\n\nTranslation: ' + violation, color = discord.Color.dark_gold())
     violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
     
