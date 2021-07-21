@@ -361,11 +361,12 @@ async def logViolation(message, fromEvent = 'sent'):
     ping = ' ' # decide priority here
     
     for word in violationList:
-        pattern = re.compile(violationDF.iloc[word, 1])
+        pattern = violationDF.iloc[word, 1]
         prev = False
         for i in range(len(string)):
             # telemetry()
-            match = pattern.match(content, i)
+            match = re.match(pattern, parseContent(string[i:]))
+            telemetry(content[:i] + "_" + content[i+1:], iHighlight)
             if match:
                 if not prev:
                     tgtLen = match.end() - match.start()
@@ -374,6 +375,7 @@ async def logViolation(message, fromEvent = 'sent'):
                     while tgtLen != parseLen:
                         iHighlight[i] = iHighlight[i] - 1
                         parseLen = len(parseContent(string[i:iHighlight[i]]))
+                    
                 prev = True
                 continue
             prev = False
@@ -403,6 +405,7 @@ async def logViolation(message, fromEvent = 'sent'):
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
+    print(message.content)
     if message.author == bot.user or message.author.bot:
         return
     await indoctrination(message)

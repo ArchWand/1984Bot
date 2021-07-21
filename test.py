@@ -36,12 +36,11 @@ for row in violationDF.itertuples():
 iHighlight = {}
 
 for word in violationList:
-    pattern = re.compile(violationDF.iloc[word, 1])
+    pattern = violationDF.iloc[word, 1]
     prev = False
     for i in range(len(string)):
         # telemetry()
-        match = pattern.match(content, i)
-        telemetry(content[:i] + "_" + content[i+1:], iHighlight)
+        match = re.match(pattern, parseContent(string[i:]))
         if match:
             if not prev:
                 tgtLen = match.end() - match.start()
