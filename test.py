@@ -57,8 +57,14 @@ for word in violationList:
 def results():
     global string
     print(string)
+    
+    offset = 0
     for key in iHighlight:
-        string = string[:key] + "_"*(iHighlight[key] - key) + string[iHighlight[key]:]
+        telemetry(' ', string, (key, iHighlight[key]), offset)
+        toAdd = f'[{string[key + offset:iHighlight[key] + offset]}](https://www.youtube.com/watch?v=dQw4w9WgXcQ)'
+        string = string[:key + offset] + toAdd + string[iHighlight[key] + offset:]
+        offset += len(toAdd) + key - iHighlight[key]
+    
     print(string)
     print(iHighlight)
     print()
