@@ -360,18 +360,23 @@ async def logViolation(message, fromEvent = 'sent'):
     
     ping = ' ' # decide priority here
     
-    # This is where the double loops will be going
-    i = 0
-    prev = False
-    while i < len(content):
-        # telemetry()
-        for word in violationList:
-            if re.match(violationDF.iloc[word, 1], content[i:]):
-                if not prev: iHighlight[i] = i + 1
+    for word in violationList:
+        pattern = re.compile(violationDF.iloc[word, 1])
+        prev = False
+        for i in range(len(string)):
+            # telemetry()
+            match = pattern.match(content, i)
+            if match:
+                if not prev:
+                    tgtLen = match.end() - match.start()
+                    iHighlight[i] = len(string)
+                    parseLen = len(parseContent(string[i:iHighlight[i]]))
+                    while tgtLen != parseLen:
+                        iHighlight[i] = iHighlight[i] - 1
+                        parseLen = len(parseContent(string[i:iHighlight[i]]))
                 prev = True
-                break
+                continue
             prev = False
-        i += 1
     
     content = content[:256] if len(content) <= 256 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
     for word in containedWords:
