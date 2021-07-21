@@ -60,8 +60,9 @@ def results():
     
     offset = 0
     for key in iHighlight:
-        telemetry(' ', string, (key, iHighlight[key]), offset)
-        toAdd = f'[{string[key + offset:iHighlight[key] + offset]}](https://www.youtube.com/watch?v=dQw4w9WgXcQ)'
+        # telemetry(' ', string, (key, iHighlight[key]), offset)
+        # toAdd = "_"*(iHighlight[key] - key)
+        toAdd = f'[{string[key + offset:iHighlight[key] + offset]}]' # (https://www.youtube.com/watch?v=dQw4w9WgXcQ)'
         string = string[:key + offset] + toAdd + string[iHighlight[key] + offset:]
         offset += len(toAdd) + key - iHighlight[key]
     
