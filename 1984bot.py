@@ -495,7 +495,7 @@ lol no idea how this works
 @bot.event
 async def on_member_update(before, member):
     if member == bot.user:
-        if not (member.guild.me.nick == sys.argv[0] or member.guild.me.nick == None):
+        if not (member.guild.me.nick == nick or member.guild.me.nick == None):
             await member.guild.me.edit(nick = nick)
 
 @bot.command(name = 'nick', aliases = ['nickname', 'nN', 'changenick', 'chnick'], help = 'REINDEX SUBJECT')
