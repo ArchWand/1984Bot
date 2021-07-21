@@ -334,8 +334,7 @@ def parseContent(string):
         ' ': ' ',
         ' ': ' ',
         r'\n': ' ',
-        '[^\x20-\x7F]': '',
-        r'(https?)(:\/\/.*?\/)': '\\1\u200B\\2'
+        '[^\x20-\x7F]': ''
     }
 
     for replaceFrom, replaceTo in replaceDict.items():
@@ -361,6 +360,7 @@ async def logViolation(message, fromEvent = 'sent'):
     ping = ' ' # decide priority here
     
     string = message.content
+    string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', string)
     for word in violationList:
         pattern = violationDF.loc[word, violationDF.columns[1]]
         prev = False
@@ -385,7 +385,6 @@ async def logViolation(message, fromEvent = 'sent'):
         string = string[:key] + toAdd + string[iHighlight[key]:]
     
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
-    print(violationList)
     embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
     embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     embed.add_field(name = '\u200b', value = alert, inline = True)
