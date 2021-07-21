@@ -37,7 +37,7 @@ if os.path.exists(violationsFilePath):
     violationDF = pd.read_csv(violationsFilePath)
     violationDF.set_index(violationDF.columns[0], inplace = True)
 else:
-    violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Priority', 'Pattern'))
+    violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Pattern', 'Priority'))
 
 newMemberKeys = {}
 blacklistSuggestions = []
@@ -351,7 +351,7 @@ async def logViolation(message, fromEvent = 'sent'):
     iHighlight = {}
     
     for row in violationDF.itertuples():
-        found = re.findall(row[2], content)
+        found = re.findall(row[1], content)
         if found:
             violationList.append(row[0])
             containedWords.update(found)
@@ -362,7 +362,7 @@ async def logViolation(message, fromEvent = 'sent'):
     string = message.content
     string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', string)
     for word in violationList:
-        pattern = violationDF.loc[word, violationDF.columns[1]]
+        pattern = violationDF.loc[word, violationDF.columns[0]]
         prev = False
         for i in range(len(string)):
             match = re.match(pattern, parseContent(string[i:]))
