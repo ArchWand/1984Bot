@@ -35,6 +35,7 @@ else:
     blacklistDF = pd.DataFrame(index = range(3), columns = ['ID', 'test'])
 if os.path.exists(violationsFilePath):
     violationDF = pd.read_csv(violationsFilePath)
+    violationDF.set_index(violationDF.columns[0], inplace = True)
 else:
     violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Priority', 'Pattern'))
 
@@ -348,19 +349,29 @@ async def logViolation(message, fromEvent = 'sent'):
     
     violationList = []
     containedWords = set()
+    iHighlight = {}
     
-    for word, pattern in zip(violationDF.iloc[:, 0], violationDF.iloc[:, 2]):
-        found = re.findall(pattern, content)
+    for row in violationDF.itertuples():
+        found = re.findall(row[2], content)
         if found:
             containedWords.update(found)
-            violationList.append(word)
+            violationList.append(row[1])
     if len(violationList) == 0: return
     
     ping = ' ' # decide priority here
     
     # This is where the double loops will be going
-    
-    
+    i = 0
+    prev = False
+    while i < len(content):
+        # telemetry()
+        for word in violationList:
+            if re.match(violationDF.iloc[word, 1], content[i:]):
+                if not prev: iHighlight[i] = i + 1
+                prev = True
+                break
+            prev = False
+        i += 1
     
     content = content[:256] if len(content) <= 256 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
     for word in containedWords:
@@ -476,7 +487,7 @@ lol no idea how this works
 
 @bot.event
 async def on_member_update(before, member):
-    if member == bot.user
+    if member == bot.user:
         if member.guild.me.nick != nick:
             await member.guild.me.edit(nick = nick)
 
