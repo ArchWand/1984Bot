@@ -266,11 +266,11 @@ async def randUptumblr(message):
         await message.add_reaction("<:uptumblr:810019271215677441>")
 
 async def beppening(message):
-    content = parseContent(message)
+    content = parseContent(message.content)
     if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
 
-def parseContent(message):
-    string = message.content.lower()
+def parseContent(string):
+    string = string.lower()
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
         '[\u200B-\u200F\u2028-\u2029\uFEFF]': '', # Zero-width characters
@@ -345,7 +345,7 @@ def parseContent(message):
 async def logViolation(message, fromEvent = 'sent'):
     if message.channel.id in ignoredChannels: return
     channel = logChannel
-    content = parseContent(message)
+    content = parseContent(message.content)
     
     violationList = []
     containedWords = set()
@@ -354,19 +354,18 @@ async def logViolation(message, fromEvent = 'sent'):
     for row in violationDF.itertuples():
         found = re.findall(row[2], content)
         if found:
+            violationList.append(row[0])
             containedWords.update(found)
-            violationList.append(row[1])
     if len(violationList) == 0: return
     
     ping = ' ' # decide priority here
     
+    string = message.content
     for word in violationList:
-        pattern = violationDF.iloc[word, 1]
+        pattern = violationDF.loc[word, violationDF.columns[1]]
         prev = False
         for i in range(len(string)):
-            # telemetry()
             match = re.match(pattern, parseContent(string[i:]))
-            telemetry(content[:i] + "_" + content[i+1:], iHighlight)
             if match:
                 if not prev:
                     tgtLen = match.end() - match.start()
@@ -381,12 +380,13 @@ async def logViolation(message, fromEvent = 'sent'):
             prev = False
     
     content = content[:256] if len(content) <= 256 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
-    for word in containedWords:
-        content = re.sub(word, f'[**{word}**]({message.jump_url})', content)
+    for key in sorted(iHighlight, reverse = True):
+        toAdd = f'[**{string[key:iHighlight[key]]}**]({message.jump_url})'
+        string = string[:key] + toAdd + string[iHighlight[key]:]
     
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
-    
-    embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), description = content, color = discord.Color.dark_gold())
+    print(violationList)
+    embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
     embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     embed.add_field(name = '\u200b', value = alert, inline = True)
     
@@ -405,7 +405,6 @@ async def logViolation(message, fromEvent = 'sent'):
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
-    print(message.content)
     if message.author == bot.user or message.author.bot:
         return
     await indoctrination(message)
