@@ -17,7 +17,7 @@ intents.members = True
 load_dotenv()
 token = os.getenv('discordToken')
 
-bot = commands.Bot(command_prefix = ['1984bot, ', '$', '\`'], intents = intents)
+bot = commands.Bot(command_prefix = ['1984bot, ', '$'], intents = intents)
 
 rulesFilePath = 'rules.csv'
 blacklistFilePath = 'blacklist.csv'
@@ -52,7 +52,7 @@ async def on_ready():
     
     welcomeChannel = ctds.system_channel
     if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
-    logChannel = bot.get_channel(808885308682797106) # 829010774231744513)
+    logChannel = bot.get_channel(829010774231744513)
     shoelaceChannel = bot.get_channel(843198731565662250)
     memberRole = ctds.get_role(835601075541245952)
     ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
