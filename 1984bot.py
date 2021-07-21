@@ -19,37 +19,36 @@ token = os.getenv('discordToken')
 
 bot = commands.Bot(command_prefix = ['1984bot, ', '$'], intents = intents)
 
-if os.path.exists('rules.csv') == True:
-    rulesDF = pd.read_csv('rules.csv', sep = ';')
+rulesFilePath = 'rules.csv'
+blacklistFilePath = 'blacklist.csv'
+violationsFilePath = 'violations.csv'
+
+if os.path.exists(rulesFilePath) == True:
+    rulesDF = pd.read_csv(rulesFilePath, sep = ';')
     rulesDF.set_index('index', inplace = True)
 else:
-    rulesDF = pd.DataFrame(index = (0, 1), columns = ['ID', '1'])
-if os.path.exists('blacklist.csv') == True:
-    blacklistDF = pd.read_csv('blacklist.csv', sep = ';')
+    rulesDF = pd.DataFrame(index = range(2), columns = ['ID', '1'])
+if os.path.exists(blacklistFilePath) == True:
+    blacklistDF = pd.read_csv(blacklistFilePath, sep = ';')
     blacklistDF.set_index('index', inplace = True)
 else:
-    blacklistDF = pd.DataFrame(index = (0, 1, 2), columns = ['ID', 'test'])
-
+    blacklistDF = pd.DataFrame(index = range(3), columns = ['ID', 'test'])
+if os.path.exists(violationsFilePath):
+    violationDF = pd.read_csv(violationsFilePath)
+    violationDF.set_index(violationDF.columns[0], inplace = True)
+else:
+    violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Priority', 'Pattern'))
 
 newMemberKeys = {}
-blacklistKeywords = []
 blacklistSuggestions = []
 
-for column in blacklistDF.columns[1:]:
-    try:
-        if math.isnan(blacklistDF.at[2, column]) == True:
-            continue
-    except:
-        keywords = re.split(' ', blacklistDF.at[2, column])
-        for word in keywords:
-            blacklistKeywords.append(word)
+nick = os.path.splitext(sys.argv[0])[0]
 
 @bot.event
 async def on_ready():
     print('ONLINE')
-    global ctds, nick, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
+    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
     ctds = bot.get_guild(808811670327263312)
-    nick = os.path.splitext(sys.argv[0])[0]
     
     welcomeChannel = ctds.system_channel
     if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
@@ -105,7 +104,7 @@ async def blUpdate(triggerEmbed, phobiaEmbed, atEmbed):
     await triggerMsg.edit(embed = triggerEmbed)
     await phobiaMsg.edit(embed = phobiaEmbed)
     await atMsg.edit(embed = atEmbed)
-    blacklistDF.to_csv('blacklist.csv', sep = ';')
+    blacklistDF.to_csv(blacklistFilePath, sep = ';')
 
 triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
 print('BLACKLIST GENERATED')
@@ -183,7 +182,8 @@ async def acceptBL(ctx, ID, *keywords):
         if ticket[0] == int(ID):
             await newBL(ctx, ticket[1], ticket[2], ticket[3], *keywords)
             blacklistSuggestions.remove(ticket)
-            
+
+
 '''
 Rules structure
     Message containing rules
@@ -202,7 +202,7 @@ async def rulesUpdate(rulesEmbed):
     rulesChannel = bot.get_channel(rulesDF.at[0, 'ID'])
     rulesMsg = await rulesChannel.fetch_message(id = rulesDF.at[1, 'ID'])
     await rulesMsg.edit(embed = rulesEmbed)
-    rulesDF.to_csv('rules.csv', sep = ';')
+    rulesDF.to_csv(rulesFilePath, sep = ';')
 
 rulesEmbed = rulesEmbedUpdate()
 print('RULES GENERATED')
@@ -266,11 +266,11 @@ async def randUptumblr(message):
         await message.add_reaction("<:uptumblr:810019271215677441>")
 
 async def beppening(message):
-    content = parseContent(message)
+    content = parseContent(message.content)
     if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
 
-def parseContent(message):
-    string = message.content.lower()
+def parseContent(string):
+    string = string.lower()
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
         '[\u200B-\u200F\u2028-\u2029\uFEFF]': '', # Zero-width characters
@@ -320,24 +320,22 @@ def parseContent(message):
         '\U0001f1fe': 'y',
         '\U0001f1ff': 'z',
         '\u262a': 'c',
-        '3\uFE0F\u20E3': 'e',
         '\u2653': 'h',
         '\u2139': 'i',
-        '1\uFE0F\u20E3': 'l',
         '\u264d': 'm',
         '\u264f': 'm',
         '\u2651': 'n',
         '\u2b55': 'o',
-        '0\uFE0F\u20E3': 'o',
         '\U0001f17f': 'p',
-        '5\uFE0F\u20E3': 's',
         '\u271d': 't',
         '\u2626': 't',
         '\u26ce': 'u',
         '\u2648': 'v',
         ' ': ' ',
         ' ': ' ',
-        '[^\x20-\x7F]': ''
+        r'\n': ' ',
+        '[^\x20-\x7F]': '',
+        r'(https?)(:\/\/.*?\/)': '\\1\u200B\\2'
     }
 
     for replaceFrom, replaceTo in replaceDict.items():
@@ -345,26 +343,64 @@ def parseContent(message):
     return string
 
 async def logViolation(message, fromEvent = 'sent'):
-    content = parseContent(message)
     if message.channel.id in ignoredChannels: return
+    channel = logChannel
+    content = parseContent(message.content)
+    
     violationList = []
-    for word in blacklistKeywords:
-        if word.lower() in content.lower():
-            violationList.append(word)
+    containedWords = set()
+    iHighlight = {}
+    
+    for row in violationDF.itertuples():
+        found = re.findall(row[2], content)
+        if found:
+            violationList.append(row[0])
+            containedWords.update(found)
     if len(violationList) == 0: return
     
-    violation = content[:128]
-    for word in violationList:
-        matches = re.findall(word, violation, flags=re.I)
-        for match in list(set(matches)):
-            violation = re.sub(match, f'[{match}]({message.jump_url})', violation)
-    if len(content) > 128: violation += f'...\n[See more ...]({message.jump_url})'
-    alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(violationList)
-    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())
-    violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-    violationEmbed.add_field(name = '\u200b', value = alert, inline = True)
+    ping = ' ' # decide priority here
     
-    await logChannel.send(embed = violationEmbed)
+    string = message.content
+    for word in violationList:
+        pattern = violationDF.loc[word, violationDF.columns[1]]
+        prev = False
+        for i in range(len(string)):
+            match = re.match(pattern, parseContent(string[i:]))
+            if match:
+                if not prev:
+                    tgtLen = match.end() - match.start()
+                    iHighlight[i] = len(string)
+                    parseLen = len(parseContent(string[i:iHighlight[i]]))
+                    while tgtLen != parseLen:
+                        iHighlight[i] = iHighlight[i] - 1
+                        parseLen = len(parseContent(string[i:iHighlight[i]]))
+                    
+                prev = True
+                continue
+            prev = False
+    
+    content = content[:256] if len(content) <= 256 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
+    for key in sorted(iHighlight, reverse = True):
+        toAdd = f'[**{string[key:iHighlight[key]]}**]({message.jump_url})'
+        string = string[:key] + toAdd + string[iHighlight[key]:]
+    
+    alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
+    print(violationList)
+    embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
+    embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
+    embed.add_field(name = '\u200b', value = alert, inline = True)
+    
+    if len(message.attachments) == 0:
+        attachments = None
+        attachmentLinks = [' ']
+    elif len(message.attachments) == 1 and message.attachments[0].size < 8388608:
+        attachments = await message.attachments[0].to_file()
+        attachmentLinks = [' ']
+    else:
+        attachments = None
+        attachmentLinks = [file.url for file in message.attachments]
+    
+    await channel.send(content = ping + '\n'.join(attachmentLinks), file = attachments, embed = embed)
 
 @bot.event
 async def on_message(message):
@@ -481,8 +517,8 @@ async def reload(ctx):
 @bot.command(name = 'disconnect', aliases = ['dc', 'logoff'], help = 'DEACTIVATE')
 @has_permissions(kick_members = True)
 async def disconnect(ctx):
-    rulesDF.to_csv('rules.csv', sep = ';')
-    blacklistDF.to_csv('blacklist.csv', sep = ';')
+    rulesDF.to_csv(rulesFilePath, sep = ';')
+    blacklistDF.to_csv(blacklistFilePath, sep = ';')
     await bot.close()
 
 bot.run(token)
