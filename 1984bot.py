@@ -273,7 +273,7 @@ def parseContent(string):
     string = string.lower()
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
-        '[\u200B-\u200F\u2028-\u2029\uFEFF]': '', # Zero-width characters
+        '\u200B': '', # Zero-width characters
         '1': 'i',
         '3': 'e',
         '4': 'a',
@@ -283,8 +283,6 @@ def parseContent(string):
         '0': 'o',
         '8': 'b',
         '&': 'and',
-        'wanna': 'want to',
-        r'\bur': 'your',
         '\U0001F447': 'your',
         '-': ' ',
         '–': ' ',
@@ -333,13 +331,15 @@ def parseContent(string):
         '\u2648': 'v',
         ' ': ' ',
         ' ': ' ',
-        r'\n': ' ',
-        '[^\x20-\x7F]': ''
+        r'\n': ' '
     }
-
-    for replaceFrom, replaceTo in replaceDict.items():
-        string = re.sub(replaceFrom, replaceTo, string)
-    return string
+    
+    out = ''
+    for letter in string:
+        if letter in replaceDict:
+            letter = replaceDict[letter]
+        out += letter
+    return re.sub('[^\x20-\x7F]', '', out)
 
 async def logViolation(message, fromEvent = 'sent'):
     if message.channel.id in ignoredChannels: return
