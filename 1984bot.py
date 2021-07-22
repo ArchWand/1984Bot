@@ -19,39 +19,46 @@ token = os.getenv('discordToken')
 
 bot = commands.Bot(command_prefix = ['1984bot, ', '$'], intents = intents)
 
-logChannelID = 829010774231744513
-shoelaceID = 843198731565662250
-memberRoleID = 835601075541245952
-ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210]
+rulesFilePath = 'rules.csv'
+blacklistFilePath = 'blacklist.csv'
+violationsFilePath = 'violations.csv'
 
-if os.path.exists('rules.csv') == True:
-    rulesDF = pd.read_csv('rules.csv', sep = ';')
+if os.path.exists(rulesFilePath) == True:
+    rulesDF = pd.read_csv(rulesFilePath, sep = ';')
     rulesDF.set_index('index', inplace = True)
 else:
-    rulesDF = pd.DataFrame(index = (0, 1), columns = ['ID', '1'])
-if os.path.exists('blacklist.csv') == True:
-    blacklistDF = pd.read_csv('blacklist.csv', sep = ';')
+    rulesDF = pd.DataFrame(index = range(2), columns = ['ID', '1'])
+if os.path.exists(blacklistFilePath) == True:
+    blacklistDF = pd.read_csv(blacklistFilePath, sep = ';')
     blacklistDF.set_index('index', inplace = True)
 else:
-    blacklistDF = pd.DataFrame(index = (0, 1, 2), columns = ['ID', 'test'])
+    blacklistDF = pd.DataFrame(index = range(3), columns = ['ID', 'test'])
+if os.path.exists(violationsFilePath):
+    violationDF = pd.read_csv(violationsFilePath)
+    violationDF.set_index(violationDF.columns[0], inplace = True)
+else:
+    violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Pattern', 'Priority'))
 
-
-newMemberKeys = []
-blacklistKeywords = []
+newMemberKeys = {}
 blacklistSuggestions = []
 
-for column in blacklistDF.columns[1:]:
-    try:
-        if math.isnan(blacklistDF.at[2, column]) == True:
-            continue
-    except:
-        keywords = re.split(' ', blacklistDF.at[2, column])
-        for word in keywords:
-            blacklistKeywords.append(word)
+nick = os.path.splitext(sys.argv[0])[0]
 
 @bot.event
 async def on_ready():
     print('ONLINE')
+    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
+    ctds = bot.get_guild(808811670327263312)
+    
+    welcomeChannel = ctds.system_channel
+    if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
+    logChannel = bot.get_channel(829010774231744513)
+    shoelaceChannel = bot.get_channel(843198731565662250)
+    memberRole = ctds.get_role(835601075541245952)
+    ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
+    noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
+    print('VARS DECLARED')
+
 
 '''
 DISCORD BOT
@@ -97,7 +104,7 @@ async def blUpdate(triggerEmbed, phobiaEmbed, atEmbed):
     await triggerMsg.edit(embed = triggerEmbed)
     await phobiaMsg.edit(embed = phobiaEmbed)
     await atMsg.edit(embed = atEmbed)
-    blacklistDF.to_csv('blacklist.csv', sep = ';')
+    blacklistDF.to_csv(blacklistFilePath, sep = ';')
 
 triggerEmbed, phobiaEmbed, atEmbed = blEmbedUpdate()
 print('BLACKLIST GENERATED')
@@ -164,7 +171,6 @@ async def suggestBL(ctx, field, subject, *descrips):
     sep = ' '
     blSuggestEmbed.add_field(name = subject, value = sep.join(descrips), inline = False)
     blSuggestEmbed.set_author(name = ctx.author.name, icon_url = ctx.author.avatar_url)
-    logChannel = bot.get_channel(logChannelID)
     message = await logChannel.send(embed = blSuggestEmbed)
     await message.edit(content = str(message.id), embed = blSuggestEmbed)
     blacklistSuggestions.append([message.id, subject, sep.join(descrips), field])
@@ -176,7 +182,8 @@ async def acceptBL(ctx, ID, *keywords):
         if ticket[0] == int(ID):
             await newBL(ctx, ticket[1], ticket[2], ticket[3], *keywords)
             blacklistSuggestions.remove(ticket)
-            
+
+
 '''
 Rules structure
     Message containing rules
@@ -195,7 +202,7 @@ async def rulesUpdate(rulesEmbed):
     rulesChannel = bot.get_channel(rulesDF.at[0, 'ID'])
     rulesMsg = await rulesChannel.fetch_message(id = rulesDF.at[1, 'ID'])
     await rulesMsg.edit(embed = rulesEmbed)
-    rulesDF.to_csv('rules.csv', sep = ';')
+    rulesDF.to_csv(rulesFilePath, sep = ';')
 
 rulesEmbed = rulesEmbedUpdate()
 print('RULES GENERATED')
@@ -242,15 +249,31 @@ Word Highlight
     send message in mod channel "message (copy) violates these keywords: [violationList]"
 '''
 
-async def beppening(message):	
-    content = parseContent(message)	
-    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))	
+async def indoctrination(message):
+    if not message.channel == shoelaceChannel: return
+    for user, code in newMemberKeys.items():
+        if message.author.id == user and message.content == str(code):
+            await message.author.add_roles(memberRole)
+            welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = f'Welcome to the server, {message.author.mention}!', color = discord.Color.dark_gold())
+            welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
+            await shoelaceChannel.send(embed = welcomeEmbed)
+            newMemberKeys.pop(user)
+            break
 
-def parseContent(message):
-    string = message.content.lower()
+async def randUptumblr(message):
+    if message.channel.id in noUptumblr: return
+    if random.random() < 0.0001:
+        await message.add_reaction("<:uptumblr:810019271215677441>")
+
+async def beppening(message):
+    content = parseContent(message.content)
+    if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
+
+def parseContent(string):
+    string = string.lower()
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
-        '\u200B-\u200F\u2028-\u2029\uFEFF': '', # Zero-width characters
+        '[\u200B-\u200F\u2028-\u2029\uFEFF]': '', # Zero-width characters
         '1': 'i',
         '3': 'e',
         '4': 'a',
@@ -313,6 +336,7 @@ def parseContent(message):
         '♈': 'v',
         ' ': ' ',
         ' ': ' ',
+        r'\n': ' ',
         '[^\x20-\x7F]': ''
     }
 
@@ -320,64 +344,83 @@ def parseContent(message):
         string = re.sub(replaceFrom, replaceTo, string)
     return string
 
-def getViolationsEmbed(message, fromEvent = 'sent'):	
-    content = parseContent(message)	
-    if message.channel.id in ignoredChannels: return	
-    violationList = []	
-    for word in blacklistKeywords:	
-        if word.lower() in content.lower():	
-            violationList.append(word)	
-    if len(violationList) == 0: return	
-
-    violation = content[:128]	
-    for word in violationList:	
-        matches = re.findall(word, violation, flags=re.I)	
-        for match in list(set(matches)):	
-            violation = re.sub(match, '['+match+']('+message.jump_url+')', violation)	
-    if len(content) > 128: violation += '...\n[See more ...](' + message.jump_url + ')'	
-    alert = message.author.name + ' ' + fromEvent + ' [a message](' + message.jump_url + ') containing: ' + ', '.join(violationList)	
-    violationEmbed = discord.Embed(title = '**Violation**: ' + ', '.join(violationList), url = message.jump_url, description = violation, color = discord.Color.dark_gold())	
-    violationEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)	
-    violationEmbed.add_field(name = '\u200b', value = alert, inline = True)	
-    return violationEmbed
+async def logViolation(message, fromEvent = 'sent'):
+    if message.channel.id in ignoredChannels: return
+    channel = logChannel
+    content = parseContent(message.content)
+    
+    violationList = []
+    containedWords = set()
+    iHighlight = {}
+    
+    for row in violationDF.itertuples():
+        found = re.findall(row[1], content)
+        if found:
+            violationList.append(row[0])
+            containedWords.update(found)
+    if len(violationList) == 0: return
+    
+    ping = ' ' # decide priority here
+    
+    string = message.content
+    string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', string)
+    for word in violationList:
+        pattern = violationDF.loc[word, violationDF.columns[0]]
+        prev = False
+        for i in range(len(string)):
+            match = re.match(pattern, parseContent(string[i:]))
+            if match:
+                if not prev:
+                    tgtLen = match.end() - match.start()
+                    iHighlight[i] = len(string)
+                    parseLen = len(parseContent(string[i:iHighlight[i]]))
+                    while tgtLen != parseLen:
+                        iHighlight[i] = iHighlight[i] - 1
+                        parseLen = len(parseContent(string[i:iHighlight[i]]))
+                    
+                prev = True
+                continue
+            prev = False
+    
+    content = content[:256] if len(content) <= 256 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
+    for key in sorted(iHighlight, reverse = True):
+        toAdd = f'[**{string[key:iHighlight[key]]}**]({message.jump_url})'
+        string = string[:key] + toAdd + string[iHighlight[key]:]
+    
+    alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
+    embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
+    embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
+    embed.add_field(name = '\u200b', value = alert, inline = True)
+    
+    if len(message.attachments) == 0:
+        attachments = None
+        attachmentLinks = [' ']
+    elif len(message.attachments) == 1 and message.attachments[0].size < 8388608:
+        attachments = await message.attachments[0].to_file()
+        attachmentLinks = [' ']
+    else:
+        attachments = None
+        attachmentLinks = [file.url for file in message.attachments]
+    
+    await channel.send(content = ping + '\n'.join(attachmentLinks), file = attachments, embed = embed)
 
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
     if message.author == bot.user or message.author.bot:
         return
-    shoelaceChannel = bot.get_channel(shoelaceID)
-    if message.channel == shoelaceChannel:
-        for pair in newMemberKeys:
-            if message.author.id == pair[0]:
-                if message.content == str(pair[1]):
-                    role = get(message.guild.roles, id = memberRoleID)
-                    if role is None: role = get(message.guild.roles, name = 'Member')
-                    await message.author.add_roles(role)
-                    welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = 'Welcome to the server, <@!'+str(message.author.id)+'>!', color = discord.Color.dark_gold())
-                    welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-                    await shoelaceChannel.send(embed = welcomeEmbed)
-                    newMemberKeys.remove(pair)
-                    break
+    await indoctrination(message)
+    await randUptumblr(message)
     await beppening(message)
-    logChannel = bot.get_channel(logChannelID)
-    try:
-        await logChannel.send(embed = getViolationsEmbed(message))
-    except Exception:
-        pass
+    await logViolation(message)
 
 @bot.event
 async def on_raw_message_edit(payload):
-    shoelaceChannel = bot.get_channel(shoelaceID)
     message = await bot.get_channel(payload.channel_id).fetch_message(id = payload.message_id)
     if message.author == bot.user or message.author.bot:
         return
     await beppening(message)
-    logChannel = bot.get_channel(logChannelID)
-    try:
-        await logChannel.send(embed = getViolationsEmbed(message, 'edited'))
-    except Exception:
-        pass
+    await logViolation(message)
     
 '''
 Cone/Ice
@@ -414,57 +457,35 @@ async def on_member_join(member):
     for index in range(len(columns)):
         if rand_index == index:
             if str(rulesDF.at[1, columns[index]]) == '-----':
-                rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = 'To access the server, paste ' + str(randKey), inline = False)
+                rulesEmbed.add_field(name = f'{str(columns[index])}. {str(rulesDF.at[0, columns[index]])}', value = f'To access the server, paste {str(randKey)}', inline = False)
             else:
-                rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]) + ' To access the server, paste ' + str(randKey), inline = False)
+                rulesEmbed.add_field(name = f'{str(columns[index])}. {str(rulesDF.at[0, columns[index]])}', value = f'{str(rulesDF.at[1, columns[index]])} To access the server, paste {str(randKey)}', inline = False)
         else:
             rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]), inline = False)
-    newMemberKeys.append([member.id, randKey])
-    try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
+    newMemberKeys[member.id] = randKey
+    try: await member.send(f"Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste the 7 digit key hidden in the rules into {shoelaceChannel.mention}. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
     except:
-        shoelaceChannel = bot.get_channel(shoelaceID)
         embed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
         embed.set_author(name = member.name, icon_url = member.avatar_url)
-        await shoelaceChannel.send(content = '<@'+str(member.id)+'>',embed = embed)
+        await shoelaceChannel.send(content = member.mention,embed = embed)
 
 @bot.command(name = 'resend', aliases = ['rS', 'resendWelcome'], help = 'REPEAT DECONTAMINATION PROCEDURES')
-async def resend(ctx, ID = None):
-    if ID == None:
+async def resend(ctx, member: discord.Member = None):
+    if member == None:
         member = ctx.author
-    else: member = bot.get_user(int(ID))
-    rulesEmbed = discord.Embed(title = 'Rules List', url = 'https://docs.google.com/document/d/1vqxfYxO2mtPh0O7rrgOTUx0UtW3a6vDyXjYclI2n5X8/edit?usp=sharing', color = discord.Color.dark_theme())
-    columns = sorted(rulesDF.columns[1:], key = int)
-    rand_index = random.randint(0, len(columns)-1)
-    randKey = random.randint(1000000, 9999999)
-    for index in range(len(columns)):
-        if rand_index == index:
-            if str(rulesDF.at[1, columns[index]]) == '-----':
-                rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = 'To access the server, paste ' + str(randKey), inline = False)
-            else:
-                rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]) + ' To access the server, paste ' + str(randKey), inline = False)
-        else:
-            rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]), inline = False)
-    newMemberKeys.append([member.id, randKey])
-    try: await member.send("Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste a key hidden in the rules into <#843198731565662250>. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
-    except:
-        shoelaceChannel = bot.get_channel(shoelaceID)
-        brokenEmbed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
-        brokenEmbed.set_author(name = member.name, icon_url = member.avatar_url)
-        await shoelaceChannel.send(content = '<@'+str(member.id)+'>',embed = brokenEmbed)
+    await on_member_join(member)
 
-@bot.command(name = 'activeKeys', aliases = ['viewActiveNewMemberKeys', 'aK', 'viewKeys'], help = 'DISPLAY NEW MATERIAL')
+@bot.command(name = 'activeKeys', aliases = ['viewActiveNewMemberKeys', 'aK', 'viewKeys'] , help = 'DISPLAY NEW MATERIAL')
 @has_permissions(kick_members = True)
 async def viewKeys(ctx):
-    keyEmbed = discord.Embed(title = 'Active New Member Keys:', color = discord.Color.greyple())
-    for pair in newMemberKeys:
-        keyEmbed.add_field(name = bot.get_user(int(pair[0])).name, value = int(pair[1]), inline = False)
+    keyEmbed = discord.Embed(title = 'Active New Member Keys:', description = ' ' if len(newMemberKeys) else 'None', color = discord.Color.greyple())
+    for userID, code in newMemberKeys.items():
+        keyEmbed.add_field(name = bot.get_user(int(userID)).name, value = int(code), inline = False)
     await ctx.send(embed = keyEmbed)
 
 @bot.event
 async def on_member_remove(member):
-    welcomeChannel = member.guild.system_channel
-    if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
-    leaveEmbed = discord.Embed(title = 'Goodbye!', description = '<@'+str(member.id)+'> has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
+    leaveEmbed = discord.Embed(title = 'Goodbye!', description = f'{member.mention} has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
     leaveEmbed.set_author(name = member.name, icon_url = member.avatar_url)
     await welcomeChannel.send(embed = leaveEmbed)
 
@@ -473,20 +494,33 @@ Reaction Roles
 lol no idea how this works
 '''
 
-@bot.command(name='ping', help = 'MONITOR CONNECTION')
+@bot.event
+async def on_member_update(before, member):
+    if member == bot.user:
+        if not (member.guild.me.nick == nick or member.guild.me.nick == None):
+            await member.guild.me.edit(nick = nick)
+
+@bot.command(name = 'nick', aliases = ['nickname', 'nN', 'changenick', 'chnick'], help = 'REINDEX SUBJECT')
+async def chnick(ctx, member: discord.Member = bot.user, *nickname):
+    global nick
+    newNick = ' '.join(nickname)
+    if member == bot.user: nick = newNick
+    await member.edit(nick = newNick)
+
+@bot.command(name = 'ping', help = 'MONITOR CONNECTION')
 async def ping(ctx):
-    await ctx.send('Ping is ' + str(np.round(1000*bot.latency, 2)) + 'ms')
+    await ctx.send(f'Ping is {str(np.round(1000*bot.latency, 2))} ms')
 
 @bot.command(name = 'reload', aliases = ['f5', 'refresh'], help = 'RELOAD')
 async def reload(ctx):
-    print('RELOADING')
+    print('\nRELOADING ..........................\n')
     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
 @bot.command(name = 'disconnect', aliases = ['dc', 'logoff'], help = 'DEACTIVATE')
 @has_permissions(kick_members = True)
 async def disconnect(ctx):
-    rulesDF.to_csv('rules.csv', sep = ';')
-    blacklistDF.to_csv('blacklist.csv', sep = ';')
+    rulesDF.to_csv(rulesFilePath, sep = ';')
+    blacklistDF.to_csv(blacklistFilePath, sep = ';')
     await bot.close()
 
 bot.run(token)
