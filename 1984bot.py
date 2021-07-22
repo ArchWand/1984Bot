@@ -273,7 +273,8 @@ def parseContent(string):
     string = string.lower()
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
-        '\u200B': '', # Zero-width characters
+        # '[\u200B-\u200F\u2028-\u2029\uFEFF]': '', # Zero-width characters
+        '\u200B': '',
         '1': 'i',
         '3': 'e',
         '4': 'a',
@@ -283,6 +284,8 @@ def parseContent(string):
         '0': 'o',
         '8': 'b',
         '&': 'and',
+        #'wanna': 'want to',
+        #r'\bur': 'your',
         '\U0001F447': 'your',
         '-': ' ',
         '–': ' ',
@@ -331,8 +334,12 @@ def parseContent(string):
         '\u2648': 'v',
         ' ': ' ',
         ' ': ' ',
-        r'\n': ' '
+        # '[^\xA\x20-\x7F]': ''
     }
+
+    # for replaceFrom, replaceTo in replaceDict.items():
+        # string = re.sub(replaceFrom, replaceTo, string)
+    # return string
     
     out = ''
     for letter in string:
