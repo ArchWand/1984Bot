@@ -1,15 +1,15 @@
 import discord
-import numpy as np
-import pandas as pd
-import os
-import sys
 from dotenv import load_dotenv
 from discord.ext import commands
-import random
 from discord.ext.commands import has_permissions, MissingPermissions
 from discord.utils import get
-import re
+import pandas as pd
+import numpy as np
+import random
 import math
+import sys
+import os
+import re
 
 intents = discord.Intents.default()
 intents.members = True
@@ -273,7 +273,8 @@ def parseContent(string):
     string = string.lower()
     # All below replaces characters in a string (common substitutions) to prevent people from escaping the blacklist
     replaceDict = {
-        '[\u200B-\u200F\u2028-\u2029\uFEFF]': '', # Zero-width characters
+        # '[\u200B-\u200F\u2028-\u2029\uFEFF]': '', # Zero-width characters
+        '\u200B': '',
         '1': 'i',
         '3': 'e',
         '4': 'a',
@@ -283,8 +284,9 @@ def parseContent(string):
         '0': 'o',
         '8': 'b',
         '&': 'and',
-        'wanna': 'want to',
-        '(?<!yo)ur': 'your',
+        #'wanna': 'want to',
+        #r'\bur': 'your',
+        '\U0001F447': 'your',
         '-': ' ',
         '–': ' ',
         '—': ' ',
@@ -336,13 +338,19 @@ def parseContent(string):
         '♈': 'v',
         ' ': ' ',
         ' ': ' ',
-        r'\n': ' ',
-        '[^\x20-\x7F]': ''
+        # '[^\xA\x20-\x7F]': ''
     }
 
-    for replaceFrom, replaceTo in replaceDict.items():
-        string = re.sub(replaceFrom, replaceTo, string)
-    return string
+    # for replaceFrom, replaceTo in replaceDict.items():
+        # string = re.sub(replaceFrom, replaceTo, string)
+    # return string
+    
+    out = ''
+    for letter in string:
+        if letter in replaceDict:
+            letter = replaceDict[letter]
+        out += letter
+    return re.sub('[^\x20-\x7F]', '', out)
 
 async def logViolation(message, fromEvent = 'sent'):
     if message.channel.id in ignoredChannels: return
