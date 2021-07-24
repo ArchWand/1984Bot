@@ -5,3 +5,4 @@ sex,\b\w*?sex.*?\b,1
 N-word,\bnigg?(?:er|a)s?\b,3
 F-slur,\bfag?(?:got)?\b,3
 R-slur,\bretard\b,3
+lugia,\b\w*?lugiaw*?\b,1
