@@ -390,8 +390,7 @@ async def logViolation(message, fromEvent = 'sent'):
     
     ping = ' ' # decide priority here
     
-    string = message.content
-    string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', string)
+    string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', message.content)
     string = highlight(message.content, [violationDF.loc[word, violationDF.columns[0]] for word in violationList], '[**', f'**]({message.jump_url})')
     
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
