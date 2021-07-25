@@ -393,7 +393,7 @@ async def logViolation(message, fromEvent = 'sent'):
     string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', message.content)
     string = highlight(message.content, [violationDF.loc[word, violationDF.columns[0]] for word in violationList], '[**', f'**]({message.jump_url})')
     
-    alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
+    alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) in {message.channel.mention} containing: ' + ', '.join(set(containedWords))
     embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
     embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     embed.add_field(name = '\u200b', value = alert, inline = True)
