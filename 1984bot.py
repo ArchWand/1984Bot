@@ -348,6 +348,31 @@ def parseContent(string):
         out += letter
     return re.sub('[^\x20-\x7F]', '', out)
 
+def highlight(text, patterns: list, prefix = '', suffix = ''):
+    if isinstance(patterns, str): patterns = [patterns]
+    iHighlight = {}
+    for pattern in patterns:
+        prev = False
+        for i in range(len(text)):
+            match = re.match(pattern, parseContent(text[i:]))
+            if match:
+                if not prev:
+                    tgtLen = match.end() - match.start()
+                    iHighlight[i] = len(text)
+                    parseLen = len(parseContent(text[i:iHighlight[i]]))
+                    while tgtLen != parseLen:
+                        iHighlight[i] = iHighlight[i] - 1
+                        parseLen = len(parseContent(text[i:iHighlight[i]]))
+                    
+                prev = True
+                continue
+            prev = False
+    
+    for key in sorted(iHighlight, reverse = True):
+        toAdd = prefix + text[key:iHighlight[key]] + suffix
+        text = text[:key] + toAdd + text[iHighlight[key]:]
+    return text
+
 async def logViolation(message, fromEvent = 'sent'):
     if message.channel.id in ignoredChannels: return
     channel = logChannel
@@ -355,7 +380,6 @@ async def logViolation(message, fromEvent = 'sent'):
     
     violationList = []
     containedWords = set()
-    iHighlight = {}
     
     for row in violationDF.itertuples():
         found = re.findall(row[1], content)
@@ -366,30 +390,8 @@ async def logViolation(message, fromEvent = 'sent'):
     
     ping = ' ' # decide priority here
     
-    string = message.content
-    string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', string)
-    for word in violationList:
-        pattern = violationDF.loc[word, violationDF.columns[0]]
-        prev = False
-        for i in range(len(string)):
-            match = re.match(pattern, parseContent(string[i:]))
-            if match:
-                if not prev:
-                    tgtLen = match.end() - match.start()
-                    iHighlight[i] = len(string)
-                    parseLen = len(parseContent(string[i:iHighlight[i]]))
-                    while tgtLen != parseLen:
-                        iHighlight[i] = iHighlight[i] - 1
-                        parseLen = len(parseContent(string[i:iHighlight[i]]))
-                    
-                prev = True
-                continue
-            prev = False
-    
-    content = content[:256] if len(content) <= 256 else f'{content[:128]}...\n[See more ...]({message.jump_url})'
-    for key in sorted(iHighlight, reverse = True):
-        toAdd = f'[**{string[key:iHighlight[key]]}**]({message.jump_url})'
-        string = string[:key] + toAdd + string[iHighlight[key]:]
+    string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', message.content)
+    string = highlight(message.content, [violationDF.loc[word, violationDF.columns[0]] for word in violationList], '[**', f'**]({message.jump_url})')
     
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
     embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
