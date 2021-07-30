@@ -1,4 +1,4 @@
-Violation,Priority,Pattern,Priority
+Violation,Pattern,Priority
 piss,\b\w*?piss.*?\b,0
 trap,\b\w*?trap.*?\b,3
 sex,\b\w*?sex.*?\b,1
