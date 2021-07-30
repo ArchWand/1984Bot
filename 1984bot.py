@@ -539,4 +539,44 @@ async def disconnect(ctx):
     blacklistDF.to_csv(blacklistFilePath, sep = ';')
     await bot.close()
 
+'''
+ANALYSIS PACKAGE
+'''
+
+@bot.command(name = 'search', aliases = ['searchTerm'], help = 'QUANTIFY USAGE OF TERM')
+@has_permissions(kick_members = True)
+async def search(ctx, *terms):
+    searchTerm = ' '.join(terms)
+    totalUsage = 0
+    messageCount = 0
+    timer = 0
+    authorList = {}
+    occurenceList = {}
+    #print('ENGAGED')
+    for channel in ctds.text_channels:
+        #print('SEARCHING ' + channel.name)
+        start = time.perf_counter()
+        history = await channel.history(limit=None).flatten()
+        timer += time.perf_counter()-start
+        messageCount += len(history)
+        for message in history:
+            num = len(re.findall(searchTerm, message.content, flags=re.I))
+            if num > 0:
+                #print('FOUND MESSAGE WITH ' + str(num) + ' ENTRIES')
+                totalUsage += num
+                if message.author.id in authorList:
+                    authorList[message.author.id] += 1
+                    occurenceList[message.author.id] += num
+                else:
+                    authorList[message.author.id] = 1
+                    occurenceList[message.author.id] = num
+    entry = max(authorList, key=authorList.get)
+    leadingUser = bot.get_user(int(entry))
+    searchEmbed = discord.Embed(title = f'Results for {searchTerm}:', description = f'{totalUsage} occurences with {len(authorList)} users among {messageCount} messages', color = discord.Color.dark_gold())
+    searchEmbed.add_field(name = f'Leading user of {searchTerm}: {leadingUser.mention}', value = '​', inline = False)
+    searchEmbed.add_field(name = f"Number of {leadingUser.name}'s messages containing {searchTerm}", value = f'{authorList[entry]}', inline = True)
+    searchEmbed.add_field(name = f"Number of {leadingUser.name}'s uses of {searchTerm}", value = f'{occurenceList[entry]}', inline = True)
+    print(f'MESSAGES EXTRACTED OVER {timer} SECONDS')
+    await ctx.send(embed=searchEmbed)
+    
 bot.run(token)
