@@ -47,7 +47,7 @@ nick = os.path.splitext(sys.argv[0])[0]
 @bot.event
 async def on_ready():
     print('ONLINE')
-    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
+    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr, theme_suggestions
     ctds = bot.get_guild(808811670327263312)
     
     welcomeChannel = ctds.system_channel
@@ -57,6 +57,8 @@ async def on_ready():
     memberRole = ctds.get_role(835601075541245952)
     ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
     noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
+    
+    theme_suggestions = bot.get_channel(870783556148944906)
     print('VARS DECLARED')
 
 
@@ -410,6 +412,10 @@ async def logViolation(message, fromEvent = 'sent'):
     
     await channel.send(content = ping + '\n'.join(attachmentLinks), file = attachments, embed = embed)
 
+async def theme_suggest(message):
+    if message.channel.id == 870783556148944906:
+        await message.author.add_roles(ctds.get_role(870785573248454656))
+
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -419,6 +425,8 @@ async def on_message(message):
     await randUptumblr(message)
     await beppening(message)
     await logViolation(message)
+    
+    await theme_suggest(message)
 
 @bot.event
 async def on_raw_message_edit(payload):
@@ -427,6 +435,8 @@ async def on_raw_message_edit(payload):
         return
     await beppening(message)
     await logViolation(message)
+    
+    await theme_suggest(message)
     
 '''
 Cone/Ice
