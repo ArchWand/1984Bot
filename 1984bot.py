@@ -481,7 +481,7 @@ async def on_member_join(member):
     newMemberKeys[member.id] = randKey
     try: await member.send(f"Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste the 7 digit key hidden in the rules into {shoelaceChannel.mention}. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
     except:
-        embed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
+        embed = discord.Embed(title = 'Oops!', description = """Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server or use the command "1984bot, resend".""", color = discord.Color.dark_theme())
         embed.set_author(name = member.name, icon_url = member.avatar_url)
         await shoelaceChannel.send(content = member.mention,embed = embed)
 
