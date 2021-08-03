@@ -49,7 +49,7 @@ nick = os.path.splitext(sys.argv[0])[0]
 @bot.event
 async def on_ready():
     print('ONLINE')
-    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr, theme_suggestions
+    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
     ctds = bot.get_guild(808811670327263312)
     
     welcomeChannel = ctds.system_channel
@@ -60,7 +60,6 @@ async def on_ready():
     ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
     noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
     
-    theme_suggestions = bot.get_channel(870783556148944906)
     print('VARS DECLARED')
 
 
