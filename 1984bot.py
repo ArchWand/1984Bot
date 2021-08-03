@@ -35,7 +35,7 @@ else:
     blacklistDF = pd.DataFrame(index = range(3), columns = ['ID', 'test'])
 if os.path.exists(violationsFilePath):
     violationDF = pd.read_csv(violationsFilePath)
-    violationDF.set_index(violationDF.columns[0], inplace = True)
+    violationDF.set_index('Violation', inplace = True)
 else:
     violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Priority', 'Pattern'))
 
@@ -383,17 +383,17 @@ async def logViolation(message, fromEvent = 'sent'):
     violationList = []
     containedWords = set()
     
-    for row in violationDF.itertuples():
-        found = re.findall(row[2], content)
+    for violation in violationDF.index:
+        found = re.findall(violationDF.loc[violation, 'Pattern'], content)
         if found:
-            violationList.append(row[0])
+            violationList.append(violation)
             containedWords.update(found)
     if len(violationList) == 0: return
     
     ping = ' ' # decide priority here
     
     string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', message.content)
-    string = highlight(message.content, [violationDF.loc[word, violationDF.columns[0]] for word in violationList], '[**', f'**]({message.jump_url})')
+    string = highlight(message.content, [violationDF.loc[word, 'Pattern'] for word in violationList], '[**', f'**]({message.jump_url})')
     
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) in {message.channel.mention} containing: ' + ', '.join(set(containedWords))
     embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
