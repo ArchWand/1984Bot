@@ -383,14 +383,23 @@ async def logViolation(message, fromEvent = 'sent'):
     violationList = []
     containedWords = set()
     
+    priority = 0
     for violation in violationDF.index:
         found = re.findall(violationDF.loc[violation, 'Pattern'], content)
         if found:
             violationList.append(violation)
+            priority = max(priority, violationDF.loc[violation, 'Priority'])
             containedWords.update(found)
     if len(violationList) == 0: return
     
-    ping = ' ' # decide priority here
+    if priority == 0:
+        ping = ' '
+    elif priority == 1:
+        ping = '<@&833185748193640478>'
+    elif priority == 2:
+        ping = '@here'
+    elif priority == 3:
+        ping = '@everyone'
     
     string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', message.content)
     string = highlight(message.content, [violationDF.loc[word, 'Pattern'] for word in violationList], '[**', f'**]({message.jump_url})')

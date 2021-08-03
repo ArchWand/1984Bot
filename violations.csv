@@ -1,8 +1,6 @@
 Violation,Priority,Pattern
-piss,0,\b\w*?piss.*?\b
-sex,1,\b\w*?sex.*?\b
-lugia,1,\blugia\b
-trap,3,\b\w*?trap.*?\b
+lugia,0,\blugia\b
+trap,2,\b\w*?trap.*?\b
 N-word,3,\bnigg?(?:er|a)s?\b
 F-slur,3,\bfag?(?:got)?\b
 R-slur,3,\bretard\b
