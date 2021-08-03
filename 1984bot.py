@@ -47,7 +47,7 @@ nick = os.path.splitext(sys.argv[0])[0]
 @bot.event
 async def on_ready():
     print('ONLINE')
-    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
+    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr, theme_suggestions
     ctds = bot.get_guild(808811670327263312)
     
     welcomeChannel = ctds.system_channel
@@ -57,6 +57,8 @@ async def on_ready():
     memberRole = ctds.get_role(835601075541245952)
     ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528]
     noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
+    
+    theme_suggestions = bot.get_channel(870783556148944906)
     print('VARS DECLARED')
 
 
@@ -393,7 +395,7 @@ async def logViolation(message, fromEvent = 'sent'):
     string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', message.content)
     string = highlight(message.content, [violationDF.loc[word, violationDF.columns[0]] for word in violationList], '[**', f'**]({message.jump_url})')
     
-    alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) containing: ' + ', '.join(set(containedWords))
+    alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) in {message.channel.mention} containing: ' + ', '.join(set(containedWords))
     embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
     embed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
     embed.add_field(name = '\u200b', value = alert, inline = True)
@@ -410,6 +412,10 @@ async def logViolation(message, fromEvent = 'sent'):
     
     await channel.send(content = ping + '\n'.join(attachmentLinks), file = attachments, embed = embed)
 
+async def theme_suggest(message):
+    if message.channel.id == 870783556148944906:
+        await message.author.add_roles(ctds.get_role(870785573248454656))
+
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -419,6 +425,8 @@ async def on_message(message):
     await randUptumblr(message)
     await beppening(message)
     await logViolation(message)
+    
+    await theme_suggest(message)
 
 @bot.event
 async def on_raw_message_edit(payload):
@@ -427,6 +435,8 @@ async def on_raw_message_edit(payload):
         return
     await beppening(message)
     await logViolation(message, 'edited')
+    
+    await theme_suggest(message)
     
 '''
 Cone/Ice
@@ -471,7 +481,7 @@ async def on_member_join(member):
     newMemberKeys[member.id] = randKey
     try: await member.send(f"Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste the 7 digit key hidden in the rules into {shoelaceChannel.mention}. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
     except:
-        embed = discord.Embed(title = 'Oops!', description = "Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server.", color = discord.Color.dark_theme())
+        embed = discord.Embed(title = 'Oops!', description = """Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server or use the command "1984bot, resend".""", color = discord.Color.dark_theme())
         embed.set_author(name = member.name, icon_url = member.avatar_url)
         await shoelaceChannel.send(content = member.mention,embed = embed)
 
@@ -529,4 +539,44 @@ async def disconnect(ctx):
     blacklistDF.to_csv(blacklistFilePath, sep = ';')
     await bot.close()
 
+'''
+ANALYSIS PACKAGE
+'''
+
+@bot.command(name = 'search', aliases = ['searchTerm'], help = 'QUANTIFY USAGE OF TERM')
+@has_permissions(kick_members = True)
+async def search(ctx, *terms):
+    searchTerm = ' '.join(terms)
+    totalUsage = 0
+    messageCount = 0
+    timer = 0
+    authorList = {}
+    occurenceList = {}
+    #print('ENGAGED')
+    for channel in ctds.text_channels:
+        #print('SEARCHING ' + channel.name)
+        start = time.perf_counter()
+        history = await channel.history(limit=None).flatten()
+        timer += time.perf_counter()-start
+        messageCount += len(history)
+        for message in history:
+            num = len(re.findall(searchTerm, message.content, flags=re.I))
+            if num > 0:
+                #print('FOUND MESSAGE WITH ' + str(num) + ' ENTRIES')
+                totalUsage += num
+                if message.author.id in authorList:
+                    authorList[message.author.id] += 1
+                    occurenceList[message.author.id] += num
+                else:
+                    authorList[message.author.id] = 1
+                    occurenceList[message.author.id] = num
+    entry = max(authorList, key=authorList.get)
+    leadingUser = bot.get_user(int(entry))
+    searchEmbed = discord.Embed(title = f'Results for {searchTerm}:', description = f'{totalUsage} occurences with {len(authorList)} users among {messageCount} messages', color = discord.Color.dark_gold())
+    searchEmbed.add_field(name = f'Leading user of {searchTerm}: {leadingUser.mention}', value = '​', inline = False)
+    searchEmbed.add_field(name = f"Number of {leadingUser.name}'s messages containing {searchTerm}", value = f'{authorList[entry]}', inline = True)
+    searchEmbed.add_field(name = f"Number of {leadingUser.name}'s uses of {searchTerm}", value = f'{occurenceList[entry]}', inline = True)
+    print(f'MESSAGES EXTRACTED OVER {timer} SECONDS')
+    await ctx.send(embed=searchEmbed)
+    
 bot.run(token)
