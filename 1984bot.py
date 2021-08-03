@@ -37,9 +37,9 @@ else:
     blacklistDF = pd.DataFrame(index = range(3), columns = ['ID', 'test'])
 if os.path.exists(violationsFilePath):
     violationDF = pd.read_csv(violationsFilePath)
-    violationDF.set_index(violationDF.columns[0], inplace = True)
+    violationDF.set_index('Violation', inplace = True)
 else:
-    violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Pattern', 'Priority'))
+    violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Priority', 'Pattern'))
 
 newMemberKeys = {}
 blacklistSuggestions = []
@@ -384,17 +384,26 @@ async def logViolation(message, fromEvent = 'sent'):
     violationList = []
     containedWords = set()
     
-    for row in violationDF.itertuples():
-        found = re.findall(row[1], content)
+    priority = 0
+    for violation in violationDF.index:
+        found = re.findall(violationDF.loc[violation, 'Pattern'], content)
         if found:
-            violationList.append(row[0])
+            violationList.append(violation)
+            priority = max(priority, violationDF.loc[violation, 'Priority'])
             containedWords.update(found)
     if len(violationList) == 0: return
     
-    ping = ' ' # decide priority here
+    if priority == 0:
+        ping = ' '
+    elif priority == 1:
+        ping = '<@&833185748193640478>'
+    elif priority == 2:
+        ping = '@here'
+    elif priority == 3:
+        ping = '@everyone'
     
     string = re.sub(r'(https?)(:\/\/.*?\/)', '\\1\u200B\\2', message.content)
-    string = highlight(message.content, [violationDF.loc[word, violationDF.columns[0]] for word in violationList], '[**', f'**]({message.jump_url})')
+    string = highlight(message.content, [violationDF.loc[word, 'Pattern'] for word in violationList], '[**', f'**]({message.jump_url})')
     
     alert = f'{message.author.name} {fromEvent} [a message]({message.jump_url}) in {message.channel.mention} containing: ' + ', '.join(set(containedWords))
     embed = discord.Embed(title = 'Violation: ' + ', '.join(violationList), url = message.jump_url, description = string, color = discord.Color.dark_gold())
@@ -435,7 +444,7 @@ async def on_raw_message_edit(payload):
     if message.author == bot.user or message.author.bot:
         return
     await beppening(message)
-    await logViolation(message)
+    await logViolation(message, 'edited')
     
     await theme_suggest(message)
     
