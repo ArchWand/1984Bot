@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
 from discord.utils import get
+from datetime import datetime
+import dateparser
 import pandas as pd
 import numpy as np
 import random
@@ -578,5 +580,21 @@ async def search(ctx, *terms):
     searchEmbed.add_field(name = f"Number of {leadingUser.name}'s uses of {searchTerm}", value = f'{occurenceList[entry]}', inline = True)
     print(f'MESSAGES EXTRACTED OVER {timer} SECONDS')
     await ctx.send(embed=searchEmbed)
-    
+
+@bot.command(name = 'timestamp', aliases = ['time', 'giveTime'], help = 'GENERATE UBIQUITOUS TIMESTAMP')
+async def timestamp(ctx, *time):
+    foundTime = dateparser.parse(" ".join(time))
+    try: # tTdDfFR
+        await ctx.send(f'''
+`<t:{int(foundTime.timestamp())}:t>`   <t:{int(foundTime.timestamp())}:t>
+`<t:{int(foundTime.timestamp())}:T>`   <t:{int(foundTime.timestamp())}:T>
+`<t:{int(foundTime.timestamp())}:d>`   <t:{int(foundTime.timestamp())}:d>
+`<t:{int(foundTime.timestamp())}:D>`   <t:{int(foundTime.timestamp())}:D>
+`<t:{int(foundTime.timestamp())}:f>`   <t:{int(foundTime.timestamp())}:f>
+`<t:{int(foundTime.timestamp())}:F>`   <t:{int(foundTime.timestamp())}:F>
+`<t:{int(foundTime.timestamp())}:R>`   <t:{int(foundTime.timestamp())}:R>
+        ''')
+    except AttributeError:
+        await ctx.send('`NO TIME DISCOVERED WITHIN PARAMETERS`' , allowed_mentions = discord.AllowedMentions(replied_user = True), reference = ctx.message)
+
 bot.run(token)
