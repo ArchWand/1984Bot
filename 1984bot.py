@@ -37,7 +37,7 @@ if os.path.exists(violationsFilePath):
     violationDF = pd.read_csv(violationsFilePath)
     violationDF.set_index(violationDF.columns[0], inplace = True)
 else:
-    violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Pattern', 'Priority'))
+    violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Priority', 'Pattern'))
 
 newMemberKeys = {}
 blacklistSuggestions = []
@@ -382,7 +382,7 @@ async def logViolation(message, fromEvent = 'sent'):
     containedWords = set()
     
     for row in violationDF.itertuples():
-        found = re.findall(row[1], content)
+        found = re.findall(row[2], content)
         if found:
             violationList.append(row[0])
             containedWords.update(found)
@@ -426,7 +426,7 @@ async def on_raw_message_edit(payload):
     if message.author == bot.user or message.author.bot:
         return
     await beppening(message)
-    await logViolation(message)
+    await logViolation(message, 'edited')
     
 '''
 Cone/Ice
