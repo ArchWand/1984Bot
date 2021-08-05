@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord.ext.commands import has_permissions, MissingPermissions
 from discord.utils import get
 from datetime import datetime
+from datetime import timedelta
 import dateparser
 import time
 import pandas as pd
@@ -50,9 +51,9 @@ nick = os.path.splitext(sys.argv[0])[0]
 @bot.event
 async def on_ready():
     print('ONLINE')
-    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr
+    global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr, serverDate
     ctds = bot.get_guild(808811670327263312)
-    
+    serverDate = ctds.created_at
     welcomeChannel = ctds.system_channel
     if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
     logChannel = bot.get_channel(829010774231744513)
@@ -255,14 +256,13 @@ Word Highlight
 
 async def indoctrination(message):
     if not message.channel == shoelaceChannel: return
-    for user, code in newMemberKeys.items():
-        if message.author.id == user and message.content == str(code):
-            await message.author.add_roles(memberRole)
-            welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = f'Welcome to the server, {message.author.mention}!', color = discord.Color.dark_gold())
-            welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
-            await shoelaceChannel.send(embed = welcomeEmbed)
-            newMemberKeys.pop(user)
-            break
+    if message.content == str(userKey(message.author)):
+        await message.author.add_roles(memberRole)
+        welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = f'Welcome to the server, {message.author.mention}!', color = discord.Color.dark_gold())
+        welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
+        await shoelaceChannel.send(embed = welcomeEmbed)
+        try: newMemberKeys.pop(message.author.id)
+        except: print('USER ABSENT FROM BACKLOG')
 
 async def randUptumblr(message):
     if message.channel.id in noUptumblr: return
@@ -475,12 +475,21 @@ Join/Leave
     on leave, immortalize their shame.
 '''
 
+def userKey(member):
+    dt = member.joined_at
+    dif = dt-serverDate
+    userID = member.id
+    seed = int(np.round(dif.total_seconds()))*userID
+    random.seed(a=seed)
+    key = random.randint(1000000, 9999999)
+    return key
+
 @bot.event
 async def on_member_join(member):
     rulesEmbed = discord.Embed(title = 'Rules List', url = 'https://docs.google.com/document/d/1vqxfYxO2mtPh0O7rrgOTUx0UtW3a6vDyXjYclI2n5X8/edit?usp=sharing', color = discord.Color.dark_theme())
     columns = sorted(rulesDF.columns[1:], key = int)
     rand_index = random.randint(0, len(columns)-1)
-    randKey = random.randint(1000000, 9999999)
+    randKey = userKey(member)
     for index in range(len(columns)):
         if rand_index == index:
             if str(rulesDF.at[1, columns[index]]) == '-----':
