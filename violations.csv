@@ -1,6 +1,6 @@
 Violation,Priority,Pattern
 lugia,0,\blugia\b
-trap,2,\b\w*?trap.*?\b
+trap,1,\b\w*?trap.*?\b
 N-word,3,\bnigg?(?:er|a)s?\b
 F-slur,3,\bfag?(?:got)?\b
 R-slur,3,\bretard\b
