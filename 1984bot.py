@@ -523,7 +523,7 @@ async def viewKeys(ctx):
 async def on_member_remove(member):
     leaveEmbed = discord.Embed(title = 'Goodbye!', description = f'{member.mention} has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
     leaveEmbed.set_author(name = member.name, icon_url = member.avatar_url)
-    await welcomeChannel.send(embed = leaveEmbed)
+    # await welcomeChannel.send(embed = leaveEmbed)
 
 '''
 Reaction Roles
