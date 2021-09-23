@@ -261,6 +261,7 @@ async def indoctrination(message):
         welcomeEmbed = discord.Embed(title = 'New member', url = message.jump_url, description = f'Welcome to the server, {message.author.mention}!', color = discord.Color.dark_gold())
         welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
         await shoelaceChannel.send(embed = welcomeEmbed)
+        await message.add_reaction("<:1984bot:890711017141706792>")
         try: newMemberKeys.pop(message.author.id)
         except: print('USER ABSENT FROM BACKLOG')
 
@@ -501,7 +502,7 @@ async def on_member_join(member):
     newMemberKeys[member.id] = randKey
     try: await member.send(f"Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste the 7 digit key hidden in the rules into {shoelaceChannel.mention}. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
     except:
-        embed = discord.Embed(title = 'Oops!', description = """Looks like you don't have DMs enabled. Please enable them temporarily and rejoin the server or use the command "1984bot, resend".""", color = discord.Color.dark_theme())
+        embed = discord.Embed(title = 'Oops!', description = """Looks like you don't have DMs enabled. Please enable them temporarily and use the command "1984bot, resend".""", color = discord.Color.dark_theme())
         embed.set_author(name = member.name, icon_url = member.avatar_url)
         await shoelaceChannel.send(content = member.mention,embed = embed)
 
@@ -523,7 +524,7 @@ async def viewKeys(ctx):
 async def on_member_remove(member):
     leaveEmbed = discord.Embed(title = 'Goodbye!', description = f'{member.mention} has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
     leaveEmbed.set_author(name = member.name, icon_url = member.avatar_url)
-    # await welcomeChannel.send(embed = leaveEmbed)
+    await logChannel.send(embed = leaveEmbed)
 
 '''
 Reaction Roles
@@ -547,6 +548,18 @@ async def chnick(ctx, member: discord.Member = bot.user, *nickname):
 async def ping(ctx):
     await ctx.send(f'Ping is {str(np.round(1000*bot.latency, 2))} ms')
 
+@bot.command(name = 'pingAverage', aliases = ['pA', 'pingAvg'], help = 'ACCOUNT FOR VARIATIONS IN CONNECTION')
+async def pingAvg(ctx):
+    async with ctx.typing():
+        start = time.perf_counter()
+        pings = []
+        while len(pings)<20:
+            ping = 1000*bot.latency
+            if (ping not in pings):
+                pings.append(ping)
+            time.sleep(2)
+    await ctx.send(f'Average ping over {str(np.round(time.perf_counter()-start))} is {str(np.round(np.mean(pings), 2))} ms')
+
 @bot.command(name = 'reload', aliases = ['f5', 'refresh'], help = 'RELOAD')
 async def reload(ctx):
     print('\nRELOADING ..........................\n')
@@ -566,37 +579,38 @@ ANALYSIS PACKAGE
 @bot.command(name = 'search', aliases = ['searchTerm'], help = 'QUANTIFY USAGE OF TERM')
 @has_permissions(kick_members = True)
 async def search(ctx, *terms):
-    searchTerm = ' '.join(terms)
-    totalUsage = 0
-    messageCount = 0
-    timer = 0
-    authorList = {}
-    occurenceList = {}
-    #print('ENGAGED')
-    for channel in ctds.text_channels:
-        #print('SEARCHING ' + channel.name)
-        start = time.perf_counter()
-        history = await channel.history(limit=None).flatten()
-        timer += time.perf_counter()-start
-        messageCount += len(history)
-        for message in history:
-            num = len(re.findall(searchTerm, message.content, flags=re.I))
-            if num > 0:
-                #print('FOUND MESSAGE WITH ' + str(num) + ' ENTRIES')
-                totalUsage += num
-                if message.author.id in authorList:
-                    authorList[message.author.id] += 1
-                    occurenceList[message.author.id] += num
-                else:
-                    authorList[message.author.id] = 1
-                    occurenceList[message.author.id] = num
-    entry = max(authorList, key=authorList.get)
-    leadingUser = bot.get_user(int(entry))
-    searchEmbed = discord.Embed(title = f'Results for {searchTerm}:', description = f'{totalUsage} occurences with {len(authorList)} users among {messageCount} messages', color = discord.Color.dark_gold())
-    searchEmbed.add_field(name = f'Leading user of {searchTerm}: {leadingUser.mention}', value = '​', inline = False)
-    searchEmbed.add_field(name = f"Number of {leadingUser.name}'s messages containing {searchTerm}", value = f'{authorList[entry]}', inline = True)
-    searchEmbed.add_field(name = f"Number of {leadingUser.name}'s uses of {searchTerm}", value = f'{occurenceList[entry]}', inline = True)
-    print(f'MESSAGES EXTRACTED OVER {timer} SECONDS')
+    async with ctx.typing():
+        searchTerm = ' '.join(terms)
+        totalUsage = 0
+        messageCount = 0
+        timer = 0
+        authorList = {}
+        occurenceList = {}
+        #print('ENGAGED')
+        for channel in ctds.text_channels:
+            #print('SEARCHING ' + channel.name)
+            start = time.perf_counter()
+            history = await channel.history(limit=None).flatten()
+            timer += time.perf_counter()-start
+            messageCount += len(history)
+            for message in history:
+                num = len(re.findall(searchTerm, message.content, flags=re.I))
+                if num > 0:
+                    #print('FOUND MESSAGE WITH ' + str(num) + ' ENTRIES')
+                    totalUsage += num
+                    if message.author.id in authorList:
+                        authorList[message.author.id] += 1
+                        occurenceList[message.author.id] += num
+                    else:
+                        authorList[message.author.id] = 1
+                        occurenceList[message.author.id] = num
+        entry = max(authorList, key=authorList.get)
+        leadingUser = bot.get_user(int(entry))
+        searchEmbed = discord.Embed(title = f'Results for {searchTerm}:', description = f'{totalUsage} occurences with {len(authorList)} users among {messageCount} messages', color = discord.Color.dark_gold())
+        searchEmbed.add_field(name = f'Leading user of {searchTerm}: {leadingUser.mention}', value = '​', inline = False)
+        searchEmbed.add_field(name = f"Number of {leadingUser.name}'s messages containing {searchTerm}", value = f'{authorList[entry]}', inline = True)
+        searchEmbed.add_field(name = f"Number of {leadingUser.name}'s uses of {searchTerm}", value = f'{occurenceList[entry]}', inline = True)
+        print(f'MESSAGES EXTRACTED OVER {timer} SECONDS')
     await ctx.send(embed=searchEmbed)
 
 @bot.command(name = 'timestamp', aliases = ['time', 'giveTime'], help = 'GENERATE UBIQUITOUS TIMESTAMP')
