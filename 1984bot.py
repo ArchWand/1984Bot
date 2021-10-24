@@ -15,6 +15,8 @@ import sys
 import os
 import re
 
+from musicCog import Music
+
 intents = discord.Intents.default()
 intents.members = True
 
@@ -43,7 +45,6 @@ if os.path.exists(violationsFilePath):
 else:
     violationDF = pd.DataFrame(index = range(3), columns = ('Violation', 'Priority', 'Pattern'))
 
-newMemberKeys = {}
 blacklistSuggestions = []
 
 nick = os.path.splitext(sys.argv[0])[0]
@@ -63,7 +64,6 @@ async def on_ready():
     noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
     
     print('VARS DECLARED')
-
 
 '''
 DISCORD BOT
@@ -262,8 +262,6 @@ async def indoctrination(message):
         welcomeEmbed.set_author(name = message.author.name, icon_url = message.author.avatar_url)
         await shoelaceChannel.send(embed = welcomeEmbed)
         await message.add_reaction("<:1984bot:890711017141706792>")
-        try: newMemberKeys.pop(message.author.id)
-        except: print('USER ABSENT FROM BACKLOG')
 
 async def randUptumblr(message):
     if message.channel.id in noUptumblr: return
@@ -424,10 +422,6 @@ async def logViolation(message, fromEvent = 'sent'):
     
     await channel.send(content = ping + '\n'.join(attachmentLinks), file = attachments, embed = embed)
 
-async def theme_suggest(message):
-    if message.channel.id == 870783556148944906:
-        await message.author.add_roles(ctds.get_role(870785573248454656))
-
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
@@ -437,8 +431,6 @@ async def on_message(message):
     await randUptumblr(message)
     await beppening(message)
     await logViolation(message)
-    
-    await theme_suggest(message)
 
 @bot.event
 async def on_raw_message_edit(payload):
@@ -447,8 +439,6 @@ async def on_raw_message_edit(payload):
         return
     await beppening(message)
     await logViolation(message, 'edited')
-    
-    await theme_suggest(message)
     
 '''
 Cone/Ice
@@ -499,7 +489,6 @@ async def on_member_join(member):
                 rulesEmbed.add_field(name = f'{str(columns[index])}. {str(rulesDF.at[0, columns[index]])}', value = f'{str(rulesDF.at[1, columns[index]])} To access the server, paste {str(randKey)}', inline = False)
         else:
             rulesEmbed.add_field(name = str(columns[index]) + '. ' + str(rulesDF.at[0, columns[index]]), value = str(rulesDF.at[1, columns[index]]), inline = False)
-    newMemberKeys[member.id] = randKey
     try: await member.send(f"Welcome to the Curated Tumblr Discord Server! To ensure you're not a bot, please read over the rules and paste the 7 digit key hidden in the rules into {shoelaceChannel.mention}. Upon doing so, you'll be able to access the rest of the server. Thanks, and have fun!", embed = rulesEmbed)     
     except:
         embed = discord.Embed(title = 'Oops!', description = """Looks like you don't have DMs enabled. Please enable them temporarily and use the command "1984bot, resend".""", color = discord.Color.dark_theme())
@@ -515,14 +504,34 @@ async def resend(ctx, member: discord.Member = None):
 @bot.command(name = 'activeKeys', aliases = ['viewActiveNewMemberKeys', 'aK', 'viewKeys'] , help = 'DISPLAY NEW MATERIAL')
 @has_permissions(kick_members = True)
 async def viewKeys(ctx):
-    keyEmbed = discord.Embed(title = 'Active New Member Keys:', description = ' ' if len(newMemberKeys) else 'None', color = discord.Color.greyple())
-    for userID, code in newMemberKeys.items():
-        keyEmbed.add_field(name = bot.get_user(int(userID)).name, value = int(code), inline = False)
-    await ctx.send(embed = keyEmbed)
+    newMemberList = []
+    for member in ctds.members:
+        if not ((memberRole in member.roles) or member.bot):
+            newMemberList.append(member)
+    pageCount = int(np.ceil(len(newMemberList)/10))
+    if pageCount == 0:
+        keyEmbed = discord.Embed(title = 'Active New Member Keys:', description = 'None', color = discord.Color.greyple())
+        await ctx.send(embed = keyEmbed)
+    elif pageCount == 1:
+        keyEmbed = discord.Embed(title = 'Active New Member Keys:', description = ' ', color = discord.Color.greyple())
+        for member in newMemberList:
+            keyEmbed.add_field(name = member.name, value = str(userKey(member)), inline = False)
+        await ctx.send(embed = keyEmbed)
+    else:
+        for i in range(pageCount):
+            keyEmbed = discord.Embed(title = 'Active New Member Keys:', description = f'Page {i+1} of {pageCount}', color = discord.Color.greyple())
+            if 10*(i+1) >= len(newMemberList):
+                for member in newMemberList[10*i:]:
+                    keyEmbed.add_field(name = member.name, value = str(userKey(member)), inline = False)
+                await ctx.send(embed = keyEmbed)
+            else:
+                for member in newMemberList[10*i:10*(i+1)]:
+                    keyEmbed.add_field(name = member.name, value = str(userKey(member)), inline = False)
+                await ctx.send(embed = keyEmbed)
 
 @bot.event
 async def on_member_remove(member):
-    leaveEmbed = discord.Embed(title = 'Goodbye!', description = f'{member.mention} has left us <:whyy:812845017412272128>', color = discord.Color.greyple())
+    leaveEmbed = discord.Embed(title = 'Goodbye!', description = f'{member.mention} has left with the following roles: {member.roles}', color = discord.Color.greyple())
     leaveEmbed.set_author(name = member.name, icon_url = member.avatar_url)
     await logChannel.send(embed = leaveEmbed)
 
@@ -549,6 +558,7 @@ async def ping(ctx):
     await ctx.send(f'Ping is {str(np.round(1000*bot.latency, 2))} ms')
 
 @bot.command(name = 'pingAverage', aliases = ['pA', 'pingAvg'], help = 'ACCOUNT FOR VARIATIONS IN CONNECTION')
+@has_permissions(kick_members = True)
 async def pingAvg(ctx):
     async with ctx.typing():
         start = time.perf_counter()
@@ -561,6 +571,7 @@ async def pingAvg(ctx):
     await ctx.send(f'Average ping over {str(np.round(time.perf_counter()-start))} is {str(np.round(np.mean(pings), 2))} ms')
 
 @bot.command(name = 'reload', aliases = ['f5', 'refresh'], help = 'RELOAD')
+@has_permissions(kick_members = True)
 async def reload(ctx):
     print('\nRELOADING ..........................\n')
     os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
@@ -629,4 +640,5 @@ async def timestamp(ctx, *time):
     except AttributeError:
         await ctx.send('`NO TIME DISCOVERED WITHIN PARAMETERS`' , allowed_mentions = discord.AllowedMentions(replied_user = True), reference = ctx.message)
 
+bot.add_cog(Music(bot))
 bot.run(token)
