@@ -15,7 +15,7 @@ import sys
 import os
 import re
 
-from musicCog import Music
+from musicAdv import Music
 
 intents = discord.Intents.default()
 intents.members = True
