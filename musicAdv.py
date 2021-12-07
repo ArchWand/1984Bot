@@ -270,7 +270,7 @@ class VoiceState:
         self._loop = False
         self._autoplay = False
         self._volume = 0.5
-        self.skip_votes = set()
+        self.skip_votes = False
 
         self.audio_player = bot.loop.create_task(self.audio_player_task())
 
@@ -309,8 +309,10 @@ class VoiceState:
         while True:
             self.next.clear()
             self.now = None
-
-            if self.loop == False:
+            if (self.loop == True and self.skip_votes == False):
+                self.now = discord.FFmpegPCMAudio(self.current.source.stream_url, **YTDLSource.FFMPEG_OPTIONS)
+                self.voice.play(self.now, after=self.play_next_song)
+            else:
                 # If autoplay is turned on wait 3 seconds for a new song.
                 # If no song is found find a new one,
                 # else if autoplay is turned off try to get the
@@ -369,11 +371,7 @@ class VoiceState:
                 self.voice.play(self.current.source, after=self.play_next_song)
                 await self.current.source.channel.send(embed=self.current.create_embed())
             
-            #If the song is looped
-            elif self.loop == True:
-                self.now = discord.FFmpegPCMAudio(self.current.source.stream_url, **YTDLSource.FFMPEG_OPTIONS)
-                self.voice.play(self.now, after=self.play_next_song)
-            
+            self.skip_votes = False
             await self.next.wait()
 
     def play_next_song(self, error=None):
@@ -383,7 +381,6 @@ class VoiceState:
         self.next.set()
 
     def skip(self):
-        self.skip_votes.clear()
 
         if self.is_playing:
             self.voice.stop()
@@ -424,17 +421,6 @@ class Music(commands.Cog):
 
     async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
         await ctx.send('ERROR: {}'.format(str(error)))
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        #if message.author.id != bot.user.id:
-            #print(f"{message.guild}/{message.channel}/{message.author.name}>{message.content}")
-            #if message.embeds:
-                #print(message.embeds[0].to_dict())
-        if message.author.id == 716390085896962058:
-            if not (message.channel.id == 883811653400035358 or message.channel.id == 884251442708348988):
-                await asyncio.sleep(4)
-                await message.delete()
 
     @commands.command(name='join', invoke_without_subcommand=True)
     async def _join(self, ctx: commands.Context):
@@ -528,30 +514,14 @@ class Music(commands.Cog):
 
     @commands.command(name='skip', aliases=['s'])
     async def _skip(self, ctx: commands.Context):
-        """DEMOCRATIC OPTION TO SKIP AUDIO.
-        REQUESTER CAN BYPASS DEMOCRACY.
+        """SKIP AUDIO.
         """
 
         if not ctx.voice_state.is_playing:
             return await ctx.send('NO AUDIO BEING PLAYED')
-
-        voter = ctx.message.author
-        if voter == ctx.voice_state.current.requester:
-            await ctx.message.add_reaction('⏭')
-            ctx.voice_state.skip()
-
-        elif voter.id not in ctx.voice_state.skip_votes:
-            ctx.voice_state.skip_votes.add(voter.id)
-            total_votes = len(ctx.voice_state.skip_votes)
-
-            if total_votes >= 3:
-                await ctx.message.add_reaction('⏭')
-                ctx.voice_state.skip()
-            else:
-                await ctx.send('VOTE TO SKIP PROGRESS: **{}/3**'.format(total_votes))
-
-        else:
-            await ctx.send('USER ALREADY VOTED')
+        ctx.voice_state.skip_votes = True
+        await ctx.message.add_reaction('⏭')
+        ctx.voice_state.skip()
 
     @commands.command(name='queue')
     async def _queue(self, ctx: commands.Context, *, page: int = 1):
