@@ -1,14 +1,3 @@
-"""
-Copyright (c) 2019 Valentin B.
-A simple music bot written in discord.py using youtube-dl.
-Though it's a simple example, music bots are complex and require much time and knowledge until they work perfectly.
-Use this as an example or a base for your own bot and extend it as you want. If there are any bugs, please let me know.
-Requirements:
-Python 3.5+
-pip install -U discord.py pynacl youtube-dl
-You also need FFmpeg in your PATH environment variable or the FFmpeg.exe binary in your bot's directory on Windows.
-"""
-
 import asyncio
 import functools
 import itertools
@@ -25,6 +14,8 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 import sys
+import re
+import time
 
 # Silence useless bug reports messages
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -199,13 +190,47 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
             duration = []
             if days > 0:
-                duration.append('{}'.format(days))
-            if hours > 0:
-                duration.append('{}'.format(hours))
-            if minutes > 0:
-                duration.append('{}'.format(minutes))
-            if seconds > 0:
-                duration.append('{}'.format(seconds))
+                duration.append('{}'.format(round(days)))
+                if hours < 10:
+                    string = '0'+str(round(hours))
+                else:
+                    string = str(round(hours))
+                duration.append(f'{string}')
+                if minutes < 10:
+                    string = '0'+str(round(minutes))
+                else:
+                    string = str(round(minutes))
+                duration.append(f'{string}')
+                if seconds < 10:
+                    string = '0'+str(round(seconds))
+                else:
+                    string = str(round(seconds))
+                duration.append(f'{string}')
+                    
+            else:
+                if hours > 0:
+                    duration.append(str(round(hours)))
+                    if minutes < 10:
+                        string = '0'+str(round(minutes))
+                    else:
+                        string = str(round(minutes))
+                    duration.append(f'{string}')
+                    if seconds < 10:
+                        string = '0'+str(round(seconds))
+                    else:
+                        string = str(round(seconds))
+                    duration.append(f'{string}')
+                else:
+                    if minutes > 0:
+                        duration.append(str(round(minutes)))
+                        if seconds < 10:
+                            string = '0'+str(round(seconds))
+                        else:
+                            string = str(round(seconds))
+                        duration.append(f'{string}')
+                    else:
+                        if seconds > 0:
+                            duration.append(str(round(seconds)))
             
             value = ':'.join(duration)
         
@@ -216,15 +241,77 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 
 class Song:
-    __slots__ = ('source', 'requester')
+    __slots__ = ('source', 'requester','starttime','elapsed')
 
     def __init__(self, source: YTDLSource):
         self.source = source
         self.requester = source.requester
+        self.starttime = time.perf_counter()
+        self.elapsed = 0
+
+    def stop(self):
+        self.elapsed = time.perf_counter()-self.starttime
+
+    def reset(self):
+        self.elapsed = 0
+        self.starttime = time.perf_counter()
+
+    def resume(self):
+        self.starttime = time.perf_counter()
     
     def create_embed(self):
+        position = time.perf_counter()-self.starttime+self.elapsed
+        minutes, seconds = divmod(position, 60)
+        hours, minutes = divmod(minutes, 60)
+        days, hours = divmod(hours, 24)
+
+        position = []
+        if days > 0:
+            position.append('{}'.format(round(days)))
+            if hours < 10:
+                string = '0'+str(round(hours))
+            else:
+                string = str(round(hours))
+            position.append(f'{string}')
+            if minutes < 10:
+                string = '0'+str(round(minutes))
+            else:
+                string = str(round(minutes))
+            position.append(f'{string}')
+            if seconds < 10:
+                string = '0'+str(round(seconds))
+            else:
+                string = str(round(seconds))
+            position.append(f'{string}')
+                
+        else:
+            if hours > 0:
+                position.append(str(round(hours)))
+                if minutes < 10:
+                    string = '0'+str(round(minutes))
+                else:
+                    string = str(round(minutes))
+                position.append(f'{string}')
+                if seconds < 10:
+                    string = '0'+str(round(seconds))
+                else:
+                    string = str(round(seconds))
+                position.append(f'{string}')
+            else:
+                if minutes > 0:
+                    position.append(str(round(minutes)))
+                    if seconds < 10:
+                        string = '0'+str(round(seconds))
+                    else:
+                        string = str(round(seconds))
+                    position.append(f'{string}')
+                else:
+                    if seconds > 0:
+                        position.append(str(round(seconds)))
+        
+        pval = ':'.join(position)
         embed = (discord.Embed(title='ACTIVE SONG', description='```css\n{0.source.title}\n```'.format(self), color=discord.Color.blurple())
-                .add_field(name='DURATION', value=self.source.duration)
+                .add_field(name='DURATION', value=f'{pval} / {self.source.duration}')
                 .add_field(name='REQUESTER', value=self.requester.mention)
                 .add_field(name='UPLOADER', value='[{0.source.uploader}]({0.source.uploader_url})'.format(self))
                 .add_field(name='URL', value='[Click]({0.source.url})'.format(self))
@@ -312,6 +399,7 @@ class VoiceState:
             if (self.loop == True and self.skip_votes == False):
                 self.now = discord.FFmpegPCMAudio(self.current.source.stream_url, **YTDLSource.FFMPEG_OPTIONS)
                 self.voice.play(self.now, after=self.play_next_song)
+                self.current.reset()
             else:
                 # If autoplay is turned on wait 3 seconds for a new song.
                 # If no song is found find a new one,
@@ -434,7 +522,6 @@ class Music(commands.Cog):
         ctx.voice_state.voice = await destination.connect()
 
     @commands.command(name='summon')
-    @commands.has_permissions(manage_guild=True)
     async def _summon(self, ctx: commands.Context, *, channel: discord.VoiceChannel = None):
         """SUMMON BOT TO AUDIO CHANNEL"""
 
@@ -449,7 +536,6 @@ class Music(commands.Cog):
         ctx.voice_state.voice = await destination.connect()
 
     @commands.command(name='leave', aliases=['dcVC','disconnectVC'])
-    @commands.has_permissions(manage_guild=True)
     async def _leave(self, ctx: commands.Context):
         """CONNECTION CLOSED"""
 
@@ -460,7 +546,6 @@ class Music(commands.Cog):
         del self.voice_states[ctx.guild.id]
 
     @commands.command(name='volume')
-    #@has_permissions(kick_members = True)
     async def _volume(self, ctx: commands.Context, *, volume: int):
         """SETS VOLUME OF AUDIO PLAYBACK.
         PERCENTILE VALUE.
@@ -475,32 +560,31 @@ class Music(commands.Cog):
         ctx.voice_state.volume = volume / 100
         await ctx.send('VOLUME SET TO {}%'.format(volume))
 
-    @commands.command(name='now', aliases=['current', 'playing'])
+    @commands.command(name='now', aliases=['current', 'playing', 'nowplaying','np'])
     async def _now(self, ctx: commands.Context):
         """DETAILS OF CURRENT AUDIO PLAYBACK"""
         embed = ctx.voice_state.current.create_embed()
         await ctx.send(embed=embed)
 
     @commands.command(name='pause', aliases=['pa'])
-    @commands.has_permissions(manage_guild=True)
     async def _pause(self, ctx: commands.Context):
         """HALT AUDIO PLAYBACK"""
         print(">>>Pause Command:")
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_playing():
             ctx.voice_state.voice.pause()
+            ctx.voice_state.current.stop()
             await ctx.message.add_reaction('⏯')
 
     @commands.command(name='resume', aliases=['re', 'res'])
-    @commands.has_permissions(manage_guild=True)
     async def _resume(self, ctx: commands.Context):
         """RESUME AUDIO PLAYBACK"""
 
         if ctx.voice_state.is_playing and ctx.voice_state.voice.is_paused():
             ctx.voice_state.voice.resume()
+            ctx.voice_state.current.resume()
             await ctx.message.add_reaction('⏯')
 
     @commands.command(name='discardQueue', aliases=['dQ'])
-    @commands.has_permissions(manage_guild=True)
     async def _stop(self, ctx: commands.Context):
         """DISCARDS CURRENT AUDIO AND QUEUE"""
 
