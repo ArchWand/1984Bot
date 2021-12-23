@@ -1,3 +1,14 @@
+"""
+Copyright (c) 2019 Valentin B.
+A simple music bot written in discord.py using youtube-dl.
+Though it's a simple example, music bots are complex and require much time and knowledge until they work perfectly.
+Use this as an example or a base for your own bot and extend it as you want. If there are any bugs, please let me know.
+Requirements:
+Python 3.5+
+pip install -U discord.py pynacl youtube-dl
+You also need FFmpeg in your PATH environment variable or the FFmpeg.exe binary in your bot's directory on Windows.
+"""
+
 import asyncio
 import functools
 import itertools
@@ -457,6 +468,7 @@ class VoiceState:
                 
                 self.current.source.volume = self._volume
                 self.voice.play(self.current.source, after=self.play_next_song)
+                self.current.reset()
                 await self.current.source.channel.send(embed=self.current.create_embed())
             
             self.skip_votes = False
@@ -689,6 +701,75 @@ class Music(commands.Cog):
                 song = Song(source)
                 await ctx.voice_state.songs.put(song)
                 await ctx.send('QUEUED {}'.format(str(source)))
+
+    @commands.command(name='playlist')
+    async def _playlist(self, ctx: commands.Context, *, search: str, loop: asyncio.BaseEventLoop = None):
+        """ADD ENTIRE YOUTUBE PLAYLIST TO QUEUE"""
+        YTDL_OPTIONS = {
+            'format': 'bestaudio/best',
+            'extractaudio': True,
+            'audioformat': 'mp3',
+            'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+            'restrictfilenames': True,
+            'noplaylist': True,
+            'nocheckcertificate': True,
+            'ignoreerrors': False,
+            'logtostderr': False,
+            'quiet': True,
+            'no_warnings': True,
+            'default_search': 'ytsearch',
+            'source_address': '0.0.0.0',
+        }
+
+        ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
+
+        print('STARTED ADDING PLAYLIST')
+
+        loop = loop or asyncio.get_event_loop()
+
+        partial = functools.partial(ytdl.extract_info, search, download=False, process=False)
+        data = await loop.run_in_executor(None, partial)
+        print('DATA OBTAINED')
+        i = 0
+        for entry in data['entries']:
+            i+=1
+            songurl = entry['id']
+            fullurl = 'https://www.youtube.com/watch?v='+songurl
+            try:
+                source = await YTDLSource.create_source(ctx, fullurl, loop=self.bot.loop)
+            except YTDLError as e:
+                await ctx.send('REQUEST ERROR: {}'.format(str(e)))
+            else:
+                if not ctx.voice_state.voice:
+                    await ctx.invoke(self._join)
+
+                song = Song(source)
+                await ctx.voice_state.songs.put(song)
+            
+
+        await ctx.send(f'''ADDED {i} SONGS TO QUEUE''')
+        
+    '''
+    @commands.command(name='playNext', aliases=['pN', 'addToFront'])
+    async def _playNext(self, ctx: commands.Context, *, search: str):
+        """ADD AUDIO TO BEGINNING OF QUEUE
+        """
+
+        async with ctx.typing():
+            try:
+                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+            except YTDLError as e:
+                await ctx.send('REQUEST ERROR: {}'.format(str(e)))
+            else:
+                if not ctx.voice_state.voice:
+                    await ctx.invoke(self._join)
+
+                song = Song(source)
+                await ctx.voice_state.songs.reverse()
+                await ctx.voice_state.songs.put(song)
+                await ctx.voice_state.songs.reverse()
+                await ctx.send('QUEUED {}'.format(str(source)))
+    '''
 
     @commands.command(name='searchYT')
     async def _search(self, ctx: commands.Context, *, search: str):
