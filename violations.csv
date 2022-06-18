@@ -1,5 +1,4 @@
 Violation,Priority,Pattern
-lugia,0,\blugia\b
 trap,1,\b\w*?trap.*?\b
 N-word,3,\bnigg?(?:er|a)s?\b
 F-slur,3,\bfagg?(?:ot)s?\b
