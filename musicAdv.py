@@ -812,7 +812,7 @@ class Music(commands.Cog):
     #            raise commands.CommandError('BOT CURRENTLY CONNECTED TO AUDIO CHANNEL')
 
     @commands.command(name = 'steal', aliases = ['theft'], help = 'AUDIO THEFT. ACCEPTED FORMATS: mp3, mp4, ogg, wav, webm, 3gp, aac, flc, m4a')
-    async def steal(ctx, url, form='mp3'):
+    async def steal(self, ctx, url, form='mp3'):
         video_info = youtube_dl.YoutubeDL().extract_info(
             url = url,download=False
         )
@@ -824,14 +824,14 @@ class Music(commands.Cog):
 
         filename = ''.join(e for e in video_info['title'] if (e.isalnum() or e==' '))
         filename = filename+'.'+form
-        
+
         options={
             'format':video,
             'keepvideo':False,
             'audioformat':form,
             'outtmpl':filename,
         }
-
+        
         async with ctx.typing():
             with youtube_dl.YoutubeDL(options) as ydl:
                 ydl.download([video_info['webpage_url']])
