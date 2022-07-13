@@ -353,6 +353,11 @@ class SongQueue(asyncio.Queue):
     def remove(self, index: int):
         del self._queue[index]
 
+def linkcheck(link):
+    if re.search("/shorts/", link):
+        link = re.sub("\?.*", '', link)
+        link = re.sub("\/shorts\/", "/watch?v=", link)
+    return link
 
 class VoiceState:
     def __init__(self, bot: commands.Bot, ctx: commands.Context):
@@ -596,7 +601,7 @@ class Music(commands.Cog):
             ctx.voice_state.current.resume()
             await ctx.message.add_reaction('⏯')
 
-    @commands.command(name='discardQueue', aliases=['dQ'])
+    @commands.command(name='discardQueue', aliases=['dQ', 'clear'])
     async def _stop(self, ctx: commands.Context):
         """DISCARDS CURRENT AUDIO AND QUEUE"""
 
@@ -691,7 +696,7 @@ class Music(commands.Cog):
 
         async with ctx.typing():
             try:
-                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+                source = await YTDLSource.create_source(ctx, linkcheck(search), loop=self.bot.loop)
             except YTDLError as e:
                 await ctx.send('REQUEST ERROR: {}'.format(str(e)))
             else:
@@ -796,18 +801,46 @@ class Music(commands.Cog):
                     await ctx.voice_state.songs.put(song)
                     await ctx.send('QUEUED {}'.format(str(source)))
             
-    @_join.before_invoke
-    @_play.before_invoke
-    async def ensure_voice_state(self, ctx: commands.Context):
-        if not ctx.author.voice or not ctx.author.voice.channel:
-            raise commands.CommandError('USER NOT CONNECTED TO AUDIO CHANNEL')
+    #@_join.before_invoke
+    #@_play.before_invoke
+    #async def ensure_voice_state(self, ctx: commands.Context):
+    #    if not ctx.author.voice or not ctx.author.voice.channel:
+    #        raise commands.CommandError('USER NOT CONNECTED TO AUDIO CHANNEL')
 
-        if ctx.voice_client:
-            if ctx.voice_client.channel != ctx.author.voice.channel:
-                raise commands.CommandError('BOT CURRENTLY CONNECTED TO AUDIO CHANNEL')
+    #    if ctx.voice_client:
+    #        if ctx.voice_client.channel != ctx.author.voice.channel:
+    #            raise commands.CommandError('BOT CURRENTLY CONNECTED TO AUDIO CHANNEL')
+
+    @commands.command(name = 'steal', aliases = ['theft'], help = 'AUDIO THEFT. ACCEPTED FORMATS: mp3, mp4, ogg, wav, webm, 3gp, aac, flc, m4a')
+    async def steal(ctx, url, form='mp3'):
+        video_info = youtube_dl.YoutubeDL().extract_info(
+            url = url,download=False
+        )
+        video = 'bestaudio/best'
+        if form not in ['3gp','aac','flv','m4a','mp3','mp4','ogg','wav','webm']:
+            form = 'mp3'
+        if form == 'mp4':
+            video = 'best'
+
+        filename = ''.join(e for e in video_info['title'] if (e.isalnum() or e==' '))
+        filename = filename+'.'+form
+        
+        options={
+            'format':video,
+            'keepvideo':False,
+            'audioformat':form,
+            'outtmpl':filename,
+        }
+
+        async with ctx.typing():
+            with youtube_dl.YoutubeDL(options) as ydl:
+                ydl.download([video_info['webpage_url']])
+
+            await ctx.send("SUCCESS", file=discord.File(filename))
+
 
 '''
-bot = commands.Bot(command_prefix='%', case_insensitive=True, description="This one should work. Not my own code, sadly.")
+bot = commands.Bot(command_prefix='%', case_insensitive=True, description="Fixed to work with latest changes to youtube.")
 bot.add_cog(Music(bot))
 
 
