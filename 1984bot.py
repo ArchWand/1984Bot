@@ -533,7 +533,7 @@ async def viewKeys(ctx):
 
 @bot.event
 async def on_member_remove(member):
-    leaveEmbed = discord.Embed(title = 'Goodbye!', description = f'{member.mention} has left with the following roles: {member.roles}', color = discord.Color.greyple())
+    leaveEmbed = discord.Embed(title = 'Goodbye!', description = f'{member.proper} has left with the following roles: {member.roles}', color = discord.Color.greyple())
     leaveEmbed.set_author(name = member.name, icon_url = member.avatar_url)
     await logChannel.send(embed = leaveEmbed)
 
