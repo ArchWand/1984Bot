@@ -21,6 +21,70 @@ from musicAdv import Music
 load_dotenv()
 token = os.getenv('discordToken')
 
+recentIDsPMA = {}
+recentIDsAMA = {}
+reactRemove = False
+
+recentIDsLandmine = {}
+landmines = {}
+
+
+def expMess(author):
+    name = author.mention
+    msg = random.choice([
+                        f"{name} https://cdn.discordapp.com/attachments/735199144578252930/1432436562343231540/fish_2.mp4",
+                        f"{name} stepped on a landmine!",
+                        f"{name} exploded.",
+                        f"{name} turned into a pile of flesh.",
+                        f"{name} got got.",
+                        f"{name} tried to rocketjump without gunboats.",
+                        f"{name} ceased to exist.",
+                        f"{name} uhhhhhhhhhhhhhhhh y'know.",
+                        f"{name} was killed by [[Intentional Game Design]](https://bugs.mojang.com/browse/MCPE-28723)",
+                        "death.fell.accident.water",
+                        f"{name} went off with a bang",
+                        f"{name} was obliterated by a sonically-charged landmine",
+                        f"{name} shattered into pieces.",
+                        f"{name} can't be put back together again.",
+                        f"{name} needs to be swept up.",
+                        f"{name} just became another dirt pile.",
+                        f"That was definitely not {name}'s fault.",
+                        f"That was definitely {name}'s fault.",
+                        f"{name} died painlessly.",
+                        f"{name}'s death was extremely painful.",
+                        f"{name} has broken every bone in their body.",
+                        f"{name} dies a slightly embarassing death.",
+                        f"{name} dies in a hilarious pose.",
+                        f"{name} https://tenor.com/view/heavy-tf2-team-fortress-2-heavy-weapons-guy-dead-death-gif-9045752817451426578",
+                        f"{name} https://tenor.com/view/cavif-cavifax-gif-3330778137757269524",
+                        f"{name} got splatted by an Ink Mine!",
+                        f"{name} tried messing with swamp dragons.",
+                        f"{name} https://tenor.com/view/dr-manhattan-gif-18899941",
+                        f"The assassins finally got to {name}.",
+                        f"{name} did an oopsie daisy.",
+                        f"{name} got Plok'd.",
+                        f"{name} asked who Steve Jobs was.",
+                        f"{name} was actually a firework.",
+                        f"{name} tried shooting 9 stickies without the Scottish Resistance.",
+                        f"{name} https://tenor.com/view/rin-tohsaka-shirou-emiya-fate-stay-night-unlimited-blade-works-explosion-gif-23846246",
+                        f"{name} https://tenor.com/view/pipe-bomb-so-cool-pipe-bomb-hatsune-miku-gif-3979886170462943769",
+                        f"{name} https://media.discordapp.net/attachments/809108951387340871/1228533347714596935/exploder.gif",
+                        f"{name} fell down the stairs! https://images-ext-1.discordapp.net/external/on-YZ-bLmwKqcNmplVusQPs_ZCBMrxdc1fM-qkThfE0/https/media.tenor.com/GZXMiGmk-7kAAAPo/anime-falling.mp4",
+                        f"{name} took a tumble down the stairs! https://tenor.com/view/castlevania-godbrand-loop-spiral-staircase-staircase-gif-20125067",
+                        f"{name} https://tenor.com/view/reverse-asdfmovie-gif-20767004",
+                        f"{name} https://cdn.discordapp.com/attachments/1432022276248834079/1432618182333566976/explode.gif",
+                        f"{name} got thrown down the stairs! https://c.tenor.com/wLF96iHtUkMAAAAC/tenor.gif",
+                        f"{name} is soaring through the air! They're like a little bird! ^_^ https://cdn.nekotina.com/images/gnFyNt5VR.gif",
+                        f"{name} was transformed into a wild beast! https://cdn.discordapp.com/attachments/1432022276248834079/1432618850448314469/2161762323_983946a7ca_o.png",
+                        f"{name} was crucified! https://cdn.discordapp.com/attachments/1432022276248834079/1432619979173400668/Crucifixion_Strasbourg_Unterlinden_Inv88RP536.png",
+                        f"{name} was struck with divine madness!",
+                        f"{name} learned the true nature of things!",
+                        f"{name} has gone outside! As should the rest of you!",
+                        f"{name} https://cdn.discordapp.com/attachments/961036258463858688/1432642546848366642/squidwardfuckingdies.mp4"
+                        ]
+    )
+    return msg
+
 async def mainBot():
     intents = discord.Intents.default()
     intents.message_content = True
@@ -57,17 +121,27 @@ async def mainBot():
     @bot.event
     async def on_ready():
         print('ONLINE')
-        global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr, serverDate
+        global ctds, welcomeChannel, logChannel, shoelaceChannel, memberRole, ignoredChannelsID, noUptumblrID, ignoredChannels, noUptumblr, serverDate, chewtoyRole, landmineChannel, validLandmineChannels
         ctds = bot.get_guild(808811670327263312)
         serverDate = ctds.created_at
         welcomeChannel = ctds.system_channel
         if welcomeChannel is None: welcomeChannel = bot.get_channel("welcome-channel")
         logChannel = bot.get_channel(829010774231744513)
         shoelaceChannel = bot.get_channel(843198731565662250)
+        landmineChannel = bot.get_channel(825738430326636554)
         memberRole = ctds.get_role(835601075541245952)
+        chewtoyRole = ctds.get_role(1424110502149361816)
         ignoredChannels = [808824429824049173, 851848452022992936, 851191799464984646, 856916672941916210, 822836922036387880, 854814653880598528, 864181609354756127]
         noUptumblr = [813499480518426624, 809854730632691712, 854814653880598528]
         
+        validCategories = [1293044771324952647, 808899650530050109, 808819803258355813, 811721715084034108, 848677493790605332, 808812095045894244]
+        validLandmineChannels = []
+        for chnl in ctds.channels:
+            if (isinstance(chnl, discord.TextChannel) or isinstance(chnl, discord.ForumChannel)):
+                if chnl.category.id in validCategories or chnl.id == 808818440629518376:
+                    if chnl.id not in [854814653880598528, 809854730632691712]:
+                        validLandmineChannels.append(chnl.id)
+
         print('VARS DECLARED')
 
     '''
@@ -204,7 +278,7 @@ async def mainBot():
 
     def rulesEmbedUpdate():
         rulesEmbed = discord.Embed(title = 'Rules List', color = discord.Color.dark_theme())
-        for column in sorted(rulesDF.columns[1:], key = int):
+        for column in rulesDF.columns[1:]:
             rulesEmbed.add_field(name = str(column) + '. ' + str(rulesDF.at[0, column]), value = str(rulesDF.at[1, column]), inline = False)
         return rulesEmbed
 
@@ -278,6 +352,11 @@ async def mainBot():
     async def beppening(message):
         content = parseContent(message.content)
         if 'bep' in content: await message.add_reaction(bot.get_emoji(824743021434241054))
+        if 'joe' in content: await message.add_reaction(bot.get_emoji(1403205405399584909))
+        if 'stephanie' in content: await message.add_reaction(bot.get_emoji(1403205409036304456))
+        if 'mizraim' in content: await message.add_reaction(bot.get_emoji(1403205407719161907))
+        if 'daniel' in content: await message.add_reaction(bot.get_emoji(1403205403424194641))
+
 
     def parseContent(string):
         string = string.lower()
@@ -429,6 +508,29 @@ async def mainBot():
         
         await channel.send(content = ping + '\n'.join(attachmentLinks), file = attachments, embed = embed)
 
+    async def landmineCheck(message):
+        if isinstance(message.channel, discord.Thread):
+            mid = message.channel.parent_id
+        else:
+            mid = message.channel.id
+        global landmines
+        if mid not in landmines.keys():
+            return
+        if landmines[mid] == 0:
+            return
+        if mid != 825738430326636554:
+            if chewtoyRole not in message.author.roles:
+                return
+        if random.random() >= 1/(1+np.exp(-0.075*(landmines[mid]-100))):
+            await message.add_reaction("💥")
+            try: await message.author.timeout(timedelta(minutes = 1.5))
+            except:
+                pass
+            await message.channel.send(expMess(message.author))
+            landmines[mid] += -1
+            if landmines[mid] == 0:
+                landmines.pop(mid)
+
     @bot.event
     async def on_message(message):
         await bot.process_commands(message)
@@ -437,7 +539,9 @@ async def mainBot():
         await indoctrination(message)
         await randUptumblr(message)
         await beppening(message)
+        await landmineCheck(message)
         await logViolation(message)
+        
 
     @bot.event
     async def on_raw_message_edit(payload):
@@ -448,7 +552,49 @@ async def mainBot():
         await logViolation(message, 'edited')
 
     @bot.event
+    async def on_message_edit(before, after):
+        if (before.mention_everyone and not after.mention_everyone) or (len(before.role_mentions)!=0 and set(before.role_mentions)!=set(after.role_mentions)) or (len(before.mentions)!=0 and set(before.mentions)!=set(after.mentions)):
+            alert = f'{before.author.name} edited [a message]({before.jump_url}) in {before.channel.mention} containing mentions'
+            embed = discord.Embed(title = 'Violation: ' + 'Pings', url = before.jump_url, description = before.clean_content, color = discord.Color.dark_gold())
+            embed.set_author(name = before.author.name, icon_url = before.author.avatar.url)
+            embed.add_field(name = '\u200b', value = alert, inline = True)
+        
+            if len(before.attachments) == 0:
+                attachments = None
+                attachmentLinks = [' ']
+            elif len(before.attachments) == 1 and before.attachments[0].size < 8388608:
+                attachments = await before.attachments[0].to_file()
+                attachmentLinks = [' ']
+            else:
+                attachments = None
+                attachmentLinks = [file.url for file in before.attachments]
+        
+            await logChannel.send(content = ' ' + '\n'.join(attachmentLinks), file = attachments, embed = embed)
+
+    @bot.event
+    async def on_message_delete(before):
+        if before.mention_everyone or ((len(before.role_mentions)!=0 or len(before.mentions)!=0) and before.type != discord.MessageType.reply) or ((len(before.role_mentions)!=0 or len(before.mentions)>1) and before.type == discord.MessageType.reply):
+            alert = f'{before.author.name} deleted [a message]({before.jump_url}) in {before.channel.mention} containing mentions'
+            embed = discord.Embed(title = 'Violation: ' + 'Pings', url = before.jump_url, description = before.clean_content, color = discord.Color.dark_gold())
+            embed.set_author(name = before.author.name, icon_url = before.author.avatar.url)
+            embed.add_field(name = '\u200b', value = alert, inline = True)
+        
+            if len(before.attachments) == 0:
+                attachments = None
+                attachmentLinks = [' ']
+            elif len(before.attachments) == 1 and before.attachments[0].size < 8388608:
+                attachments = await before.attachments[0].to_file()
+                attachmentLinks = [' ']
+            else:
+                attachments = None
+                attachmentLinks = [file.url for file in before.attachments]
+        
+            await logChannel.send(content = ' ' + '\n'.join(attachmentLinks), file = attachments, embed = embed)
+
+    @bot.event
     async def on_raw_reaction_remove(payload):
+        if not reactRemove:
+            return
         user = bot.get_user(payload.user_id)
         serv = bot.get_guild(payload.guild_id)
         channel = serv.get_channel(payload.channel_id)
@@ -460,6 +606,11 @@ async def mainBot():
             deleteEmbed = discord.Embed(title = 'Reaction deleted', description = f'**Offender:** {user.mention}\n {str(emote)}', url = msg.jump_url, color = discord.Color.default())
             await logChannel.send(embed=deleteEmbed)
 
+    @bot.command(name='toggleReactions', help = 'TOGGLE LOGGING OF REACTIONS')
+    async def togRR(ctx):
+        global reactRemove
+        reactRemove = not reactRemove
+        await ctx.send(f'TOGGLED LOGGING TO {reactRemove}')
 
     '''
     Cone/Ice
@@ -476,6 +627,21 @@ async def mainBot():
         send mod channel msg "hey! user got kicked/banned! reason?"
         dm user with reason
     '''
+    @bot.command(name='appeal', help = 'LODGE REQUEST TO REPEAL PUNISHMENT')
+    async def appeal(ctx):
+        #perm check
+        userPre = ctx.author
+        user = await ctds.fetch_member(userPre.id)
+        punishmentRoleList = [ctds.get_role(808939025066623006), ctds.get_role(809515769665945660), ctds.get_role(1292316592226435112)]
+        if not any(role in user.roles for role in punishmentRoleList):
+            return
+        threadChannel = ctds.get_channel(1144616583369605140)
+        appealThread = await threadChannel.create_thread(name=f'Appeal Thread - {user.name}', message=None, reason='Appeal thread', invitable=False)
+        await appealThread.add_user(user)
+        await appealThread.send(f'{user.mention}')
+
+
+
 
     '''
     Join/Leave
@@ -488,6 +654,7 @@ async def mainBot():
     '''
 
     def userKey(member):
+        member = ctds.get_member(member.id)
         dt = member.joined_at
         dif = dt-serverDate
         userID = member.id
@@ -498,8 +665,8 @@ async def mainBot():
 
     @bot.event
     async def on_member_join(member):
-        rulesEmbed = discord.Embed(title = 'Rules List', url = 'https://docs.google.com/document/d/1vqxfYxO2mtPh0O7rrgOTUx0UtW3a6vDyXjYclI2n5X8/edit?usp=sharing', color = discord.Color.dark_theme())
-        columns = sorted(rulesDF.columns[1:], key = int)
+        rulesEmbed = discord.Embed(title = 'Rules List', url = 'https://discord.com/channels/808811670327263312/808818237252304907', color = discord.Color.dark_theme())
+        columns = rulesDF.columns[1:]
         rand_index = random.randint(0, len(columns)-1)
         randKey = userKey(member)
         for index in range(len(columns)):
@@ -660,6 +827,116 @@ async def mainBot():
             ''')
         except AttributeError:
             await ctx.send('`NO TIME DISCOVERED WITHIN PARAMETERS`' , allowed_mentions = discord.AllowedMentions(replied_user = True), reference = ctx.message)
+
+    @bot.command(name = 'pingMeAnything', aliases = ['pma'], help = 'SEND A PINGING MESSAGE TO THOSE WHO DESIRE IT')
+    async def pma(ctx, *content):
+        auth = ctx.author
+        bannedFromAPMA = ctds.get_role(1292316592226435112)
+        if bannedFromAPMA not in auth.roles:
+            if auth.id not in recentIDsPMA:
+                mainBody = '<@&1086001388091363328>'
+                msg = ' '.join(content)
+                embed = discord.Embed(title = 'Ping Me Anything Message:', description = msg, color = discord.Color.orange())
+                embed.set_author(name = auth.name, icon_url = auth.avatar.url)
+                await ctx.channel.send(mainBody, embed=embed)
+                await ctx.message.delete()
+                recentIDsPMA[auth.id] = 0
+                await asyncio.sleep(3600)
+                recentIDsPMA.pop(auth.id) 
+
+    @bot.command(name = 'askMeAnything', aliases = ['ama'], help = 'ASK A PINGING QUESTION TO THOSE WHO DESIRE IT')
+    async def ama(ctx, *content):
+        auth = ctx.author
+        bannedFromAPMA = ctds.get_role(1292316592226435112)
+        if bannedFromAPMA not in auth.roles:
+            if auth.id not in recentIDsAMA:
+                mainBody = '<@&839403091119964180>'
+                msg = ' '.join(content)
+                embed = discord.Embed(title = 'Ask Me Anything Question:', description = msg, color = discord.Color.orange())
+                embed.set_author(name = auth.name, icon_url = auth.avatar.url)
+                await ctx.channel.send(mainBody, embed=embed)
+                await ctx.message.delete()
+                recentIDsAMA[auth.id] = 0
+                await asyncio.sleep(3600)
+                recentIDsAMA.pop(auth.id)            
+
+    @bot.command(name = 'landmine', help = 'PLANT A LANDMINE IN THE SPECIFIED CHANNEL')
+    async def landmine(ctx, channel: discord.abc.GuildChannel = None):
+        if isinstance(channel, discord.Thread): channel = channel.parent
+        if not (isinstance(channel, discord.TextChannel) or isinstance(channel, discord.ForumChannel)) and channel != None:
+            await ctx.channel.send(f"Unable to landmine {channel.mention}!")
+            return
+        if ctx.channel == landmineChannel:
+            if ctx.author.id not in recentIDsLandmine:
+                recentIDsLandmine[ctx.author.id] = 0
+            if recentIDsLandmine[ctx.author.id] == 6:
+                await ctx.channel.send(f"{ctx.author.mention} needs to wait for resupply before laying more mines!")
+            else:
+                if channel == None:
+                    channel = ctds.get_channel(random.choice(validLandmineChannels))
+                if channel.id in validLandmineChannels:
+                    recentIDsLandmine[ctx.author.id] += 1
+                    localVal = recentIDsLandmine[ctx.author.id]
+                    global landmines
+                    if channel.id not in landmines.keys():
+                        landmines[channel.id] = 1
+                    else:
+                        landmines[channel.id] += 1
+                    await ctx.send(f"Planted a landmine in {channel.mention}!")
+                    await asyncio.sleep(300)
+                    if recentIDsLandmine[ctx.author.id] >= localVal:
+                        recentIDsLandmine[ctx.author.id] = 0
+                    
+                else:
+                    await ctx.channel.send(f"Interserver treaties have outlawed the planting of landmines in {channel.mention}. For shame, you would-be war criminal.")
+        else:
+            msg = await ctx.send(f"Go to {landmineChannel.mention} to plant landmines.")
+            await asyncio.sleep(3)
+            await msg.delete()
+        
+    @bot.command(name = 'viewLandmines', aliases = ['vL', 'minesweeper'], help = 'VIEW ACTIVE MINEFIELDS')
+    async def viewLandmines(ctx):
+        if ctx.channel == landmineChannel:
+            lCount = 0
+            cCount = 0
+            for x, y in landmines.items():
+                lCount += y
+                cCount += 1
+            if len(landmines.keys()) <= 20:
+                mineEmbed = discord.Embed(title = f'Minesweep results:', description = f'Detected {lCount} mines across {cCount} channels!', color = discord.Color.dark_gold())
+                for i in range(int((len(landmines.items())-(len(landmines.items())%2))/2)):
+                    mineEmbed.add_field(name = f"{ctds.get_channel(list(landmines.keys())[2*i]).mention} : {landmines[list(landmines.keys())[2*i]]}", value = f"{ctds.get_channel(list(landmines.keys())[2*i+1]).mention} : {landmines[list(landmines.keys())[2*i+1]]}", inline = True)
+                if len(landmines.items())%2 == 1:
+                    mineEmbed.add_field(name = f"{ctds.get_channel(list(landmines.keys())[-1]).mention} : {landmines[list(landmines.keys())[-1]]}", value = f" ", inline = True)
+                await ctx.channel.send(embed = mineEmbed)
+        else:
+            msg = await ctx.send(f"Go to {landmineChannel.mention} to check for landmines.")
+            await asyncio.sleep(3)
+            await msg.delete()
+
+    @bot.command(name = 'proliferateMines', aliases = ['pM', 'massmine'], help = 'LAY A NUMBER OF MINES IN A CHANNEL')
+    @has_permissions(kick_members = True)
+    async def massmine(ctx, channel: discord.abc.GuildChannel = None, num: int = 1):
+        if isinstance(channel, discord.Thread): channel = channel.parent
+        if not (isinstance(channel, discord.TextChannel) or isinstance(channel, discord.ForumChannel)) and channel != None:
+            await ctx.channel.send(f"Unable to landmine {channel.mention}!")
+            return
+        if channel == None:
+            channel = ctds.get_channel(random.choice(validLandmineChannels))
+        if channel.id not in landmines.keys():
+            if num <= 0:
+                await ctx.send(f"Cannot remove landmines from a channel without any!")
+                return
+            landmines[channel.id] = num
+        else:
+            if (landmines[channel.id] + num) <= 0:
+                landmines.pop(channel.id)
+                await ctx.send(f"Removed all landmines from {channel.mention}.")
+            landmines[channel.id] += num
+        if num >= 0:
+            await ctx.send(f"Planted {num} landmines in {channel.mention}!")
+        else:
+            await ctx.send(f"Removed {np.abs(num)} landmines from {channel.mention}")
 
     await bot.add_cog(Music(bot))
 
